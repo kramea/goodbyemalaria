@@ -1,0 +1,909 @@
+{
+  "_meta": {
+    "description": "Curated sub-national malaria decision-support dataset for Goodbye Malaria field operations in Mozambique and Malawi. Values are synthesized from open sources for hackathon/demo use and should be re-validated against live feeds before operational use. Geo/elevation fields are approximate, curated for thematic mapping and nearest-region matching.",
+    "sources": [
+      "WHO World Malaria Report 2025 (district incidence bands)",
+      "Malaria Atlas Project (MAP) sub-national PfPR estimates",
+      "CHIRPS daily rainfall (UCSB Climate Hazards Center)",
+      "SRTM / Copernicus GLO-30 DEM + HAND (low-lying / flood-prone zones)",
+      "PMI/Goodbye Malaria IRS + ITN campaign records",
+      "WHO Global database on insecticide resistance"
+    ],
+    "as_of": "2026-06-13",
+    "season_note": "Southern Africa transmission is rainfall-driven. Core wet season is roughly Nov-Apr; June is normally dry-season trough. Early/anomalous rains shift risk forward. 2025-2026 saw an anomalous early-rain surge in parts of southern Mozambique.",
+    "elevation_note": "Low-lying, flat ground near rivers/lakes pools water after rain and becomes larval habitat within days. Elevation + flood-proneness are first-order signals for where to target larviciding and larval source management."
+  },
+  "regions": {
+    "gaza": {
+      "names": [
+        "Gaza",
+        "Província de Gaza",
+        "Xai-Xai",
+        "Chókwè",
+        "Chokwe",
+        "Guijá",
+        "Massingir"
+      ],
+      "country": "Mozambique",
+      "language_default": "Portuguese",
+      "incidence_trend": "High and rising. WHO WMR 2025 places Gaza districts in the high-burden band (>450 cases/1000/yr in Chókwè/Guijá irrigated zones). 3-year trend upward, driven by Limpopo valley irrigation and flood cycles.",
+      "current_status": {
+        "alert_level": "outbreak",
+        "headline": "Active flood-driven case surge in the Chókwè–Guijá irrigation zone after the 2025–26 anomalous early-rain surge; extensive new standing water.",
+        "trend": "High-burden band (>450 cases/1,000/yr in irrigated districts), rising over the past ~3 weeks.",
+        "as_of": "2026-06",
+        "source": "WHO WMR 2025 district bands + CHIRPS rainfall anomaly",
+        "flooding_now": true
+      },
+      "rainfall_flood_status": "CHIRPS flagged an ANOMALOUS EARLY-RAIN SURGE across southern Mozambique in late 2025 / early 2026 — 150-200% of normal for the period, with localized flooding along the Limpopo. Extensive standing water and new breeding habitat in Chókwè and Guijá.",
+      "season": "Normal wet season Nov-Mar; 2026 onset was early. Flood-associated transmission spikes follow standing water by 2-4 weeks.",
+      "elevation_flood": "Limpopo valley floor 10-40 m — flat alluvial irrigation plain (Chókwè scheme), strongly low-lying. Flood-proneness VERY HIGH; the 2026 early-rain surge pooled extensively across the irrigation plain and Limpopo floodplain near Xai-Xai.",
+      "last_intervention": "IRS completed Oct 2025 (Actellic 300CS) ahead of normal season; ITN mass campaign 2024 (PermaNet 3.0), coverage now decaying (~55% usable). No larviciding program currently active.",
+      "resistance_profile": "Confirmed pyrethroid resistance (deltamethrin, permethrin) in An. funestus. Organophosphate (pirimiphos-methyl / Actellic) and clothianidin (SumiShield) still effective. Avoid pyrethroid-only tools as primary vector control.",
+      "infrastructure": "Irrigated agricultural zone, peri-urban Xai-Xai and Chókwè town. Road access good in dry conditions but flood-disrupted. Spray teams and Bti stocks reachable from provincial depot.",
+      "vectors": [
+        "An. funestus",
+        "An. arabiensis"
+      ],
+      "geo": {
+        "center": [
+          -24.7,
+          33.2
+        ],
+        "water_bodies": [
+          {
+            "name": "Limpopo River",
+            "type": "river",
+            "path": [
+              [
+                -24.0,
+                32.7
+              ],
+              [
+                -24.53,
+                32.99
+              ],
+              [
+                -24.8,
+                33.3
+              ],
+              [
+                -25.05,
+                33.64
+              ]
+            ]
+          }
+        ],
+        "low_lying_zones": [
+          {
+            "name": "Chókwè irrigation plain",
+            "center": [
+              -24.53,
+              33.0
+            ],
+            "risk": "high",
+            "note": "Flat alluvial scheme, <40 m, pools rapidly"
+          },
+          {
+            "name": "Limpopo floodplain (Xai-Xai)",
+            "center": [
+              -25.0,
+              33.5
+            ],
+            "risk": "high",
+            "note": "Lower Limpopo, flood-exposed"
+          }
+        ],
+        "risk_hotspots": [
+          {
+            "name": "Chókwè town",
+            "center": [
+              -24.53,
+              32.99
+            ],
+            "risk": "high"
+          },
+          {
+            "name": "Guijá",
+            "center": [
+              -24.51,
+              33.02
+            ],
+            "risk": "high"
+          },
+          {
+            "name": "Xai-Xai",
+            "center": [
+              -25.05,
+              33.64
+            ],
+            "risk": "moderate"
+          }
+        ]
+      }
+    },
+    "maputo": {
+      "names": [
+        "Maputo",
+        "Maputo Província",
+        "Maputo Cidade",
+        "Matola",
+        "Boane",
+        "Namaacha",
+        "Manhiça",
+        "Manhica"
+      ],
+      "country": "Mozambique",
+      "language_default": "Portuguese",
+      "incidence_trend": "Moderate and declining in the city; higher in Manhiça/Magude rural districts. Maputo is the national elimination-frontier province (8 southern districts targeting elimination).",
+      "current_status": {
+        "alert_level": "normal",
+        "headline": "Dry-season trough; city transmission low and declining. Elimination-corridor surveillance ongoing in Magude/Manhiça.",
+        "trend": "Moderate and declining in the city; focal rural risk only.",
+        "as_of": "2026-06",
+        "source": "WHO WMR 2025 + Goodbye Malaria elimination programme",
+        "flooding_now": false
+      },
+      "rainfall_flood_status": "Early 2026 rains above normal but less extreme than Gaza. Localized standing water in peri-urban Matola.",
+      "season": "Wet season Nov-Mar.",
+      "elevation_flood": "Coastal lowland 5-50 m. Manhiça/Incomáti floodplain low-lying. Flood-proneness MODERATE; localized peri-urban pooling in Matola wetlands.",
+      "last_intervention": "IRS in elimination districts 2025 (SumiShield / clothianidin); reactive case-based surveillance and focal response active in Magude/Manhiça (Goodbye Malaria elimination corridor).",
+      "resistance_profile": "Pyrethroid resistance present; clothianidin and pirimiphos-methyl effective. Elimination strategy favors IRS + surveillance over mass ITN.",
+      "infrastructure": "Strong — capital region, best logistics in country. Good for rapid response and case investigation.",
+      "vectors": [
+        "An. funestus",
+        "An. arabiensis"
+      ],
+      "geo": {
+        "center": [
+          -25.6,
+          32.6
+        ],
+        "water_bodies": [
+          {
+            "name": "Incomáti River",
+            "type": "river",
+            "path": [
+              [
+                -25.0,
+                32.7
+              ],
+              [
+                -25.4,
+                32.81
+              ],
+              [
+                -25.7,
+                32.7
+              ]
+            ]
+          }
+        ],
+        "low_lying_zones": [
+          {
+            "name": "Matola peri-urban wetlands",
+            "center": [
+              -25.96,
+              32.46
+            ],
+            "risk": "moderate",
+            "note": "Localized standing water"
+          },
+          {
+            "name": "Manhiça floodplain",
+            "center": [
+              -25.4,
+              32.81
+            ],
+            "risk": "moderate"
+          }
+        ],
+        "risk_hotspots": [
+          {
+            "name": "Manhiça",
+            "center": [
+              -25.4,
+              32.81
+            ],
+            "risk": "high"
+          },
+          {
+            "name": "Matola",
+            "center": [
+              -25.96,
+              32.46
+            ],
+            "risk": "moderate"
+          },
+          {
+            "name": "Maputo city",
+            "center": [
+              -25.97,
+              32.57
+            ],
+            "risk": "low"
+          }
+        ]
+      }
+    },
+    "sofala": {
+      "names": [
+        "Sofala",
+        "Beira",
+        "Dondo",
+        "Nhamatanda",
+        "Búzi",
+        "Buzi",
+        "Caia"
+      ],
+      "country": "Mozambique",
+      "language_default": "Portuguese",
+      "incidence_trend": "Very high. Central Mozambique holds the largest national burden. Cyclone-prone coast (Beira) with recurrent flood-driven epidemics.",
+      "current_status": {
+        "alert_level": "elevated",
+        "headline": "Beira flood corridor on alert; persistent standing water from Búzi/Pungwe floodplains keeps breeding pressure high even in dry season.",
+        "trend": "Very high year-round; acute cyclone/flood spikes.",
+        "as_of": "2026-06",
+        "source": "WHO WMR 2025 + flood monitoring",
+        "flooding_now": true
+      },
+      "rainfall_flood_status": "Cyclone/flood corridor. Post-cyclone standing water repeatedly triggers larviciding needs. 2026 early season wet.",
+      "season": "Wet season Nov-Apr; cyclone season Dec-Mar adds acute flood spikes.",
+      "elevation_flood": "Beira sits at/near sea level — much of the city is below 5 m and among the most flood-exposed cities in Africa. Búzi and Pungwe floodplains very low. Flood-proneness VERY HIGH; storm-surge + river flooding leave persistent standing water.",
+      "last_intervention": "ITN mass campaign 2024 (Interceptor G2 — chlorfenapyr+pyrethroid, chosen for resistance). IRS focal in Beira peri-urban.",
+      "resistance_profile": "Strong pyrethroid resistance — this is why Interceptor G2 (dual-active, chlorfenapyr) was deployed. ATSB and OP-based IRS are resistance-robust options.",
+      "infrastructure": "Beira port logistics good; rural Búzi/Caia flood-isolated in wet season.",
+      "vectors": [
+        "An. funestus",
+        "An. gambiae s.s."
+      ],
+      "geo": {
+        "center": [
+          -19.85,
+          34.6
+        ],
+        "water_bodies": [
+          {
+            "name": "Pungwe River",
+            "type": "river",
+            "path": [
+              [
+                -19.6,
+                34.4
+              ],
+              [
+                -19.8,
+                34.7
+              ],
+              [
+                -19.84,
+                34.84
+              ]
+            ]
+          },
+          {
+            "name": "Búzi River",
+            "type": "river",
+            "path": [
+              [
+                -19.98,
+                34.13
+              ],
+              [
+                -19.9,
+                34.5
+              ],
+              [
+                -19.85,
+                34.8
+              ]
+            ]
+          }
+        ],
+        "low_lying_zones": [
+          {
+            "name": "Beira coastal city (<5 m)",
+            "center": [
+              -19.84,
+              34.84
+            ],
+            "risk": "very high",
+            "note": "At/near sea level; drainage canals pool"
+          },
+          {
+            "name": "Búzi floodplain",
+            "center": [
+              -19.98,
+              34.13
+            ],
+            "risk": "high"
+          }
+        ],
+        "risk_hotspots": [
+          {
+            "name": "Beira",
+            "center": [
+              -19.84,
+              34.84
+            ],
+            "risk": "very high"
+          },
+          {
+            "name": "Búzi",
+            "center": [
+              -19.98,
+              34.13
+            ],
+            "risk": "high"
+          },
+          {
+            "name": "Nhamatanda",
+            "center": [
+              -19.27,
+              34.18
+            ],
+            "risk": "high"
+          }
+        ]
+      }
+    },
+    "zambezia": {
+      "names": [
+        "Zambézia",
+        "Zambezia",
+        "Quelimane",
+        "Mocuba",
+        "Milange",
+        "Gurúè",
+        "Gurue"
+      ],
+      "country": "Mozambique",
+      "language_default": "Portuguese",
+      "incidence_trend": "Among the two highest-burden provinces nationally (with Nampula). High year-round transmission.",
+      "current_status": {
+        "alert_level": "elevated",
+        "headline": "Among the two highest-burden provinces nationally; high transmission persists into the dry season.",
+        "trend": "High year-round.",
+        "as_of": "2026-06",
+        "source": "WHO WMR 2025",
+        "flooding_now": false
+      },
+      "rainfall_flood_status": "High rainfall province; extensive lowland flooding in wet season.",
+      "season": "Wet season Nov-Apr, long.",
+      "elevation_flood": "Coastal delta lowland near sea level around Quelimane; Licungo and Zambezi floodplains very low and broad. Flood-proneness HIGH; long wet season sustains lowland standing water.",
+      "last_intervention": "ITN mass campaign 2024 (Interceptor G2). Limited IRS coverage.",
+      "resistance_profile": "Pyrethroid resistance widespread; dual-active nets and OP/clothianidin IRS preferred.",
+      "infrastructure": "Large, populous, mixed access. SMC being scaled in seasonal-transmission districts.",
+      "vectors": [
+        "An. funestus",
+        "An. gambiae s.s."
+      ],
+      "geo": {
+        "center": [
+          -17.4,
+          36.9
+        ],
+        "water_bodies": [
+          {
+            "name": "Licungo River",
+            "type": "river",
+            "path": [
+              [
+                -16.84,
+                36.99
+              ],
+              [
+                -17.4,
+                36.95
+              ],
+              [
+                -17.88,
+                36.89
+              ]
+            ]
+          }
+        ],
+        "low_lying_zones": [
+          {
+            "name": "Quelimane coastal delta",
+            "center": [
+              -17.88,
+              36.89
+            ],
+            "risk": "high",
+            "note": "Near sea level"
+          },
+          {
+            "name": "Licungo floodplain (Mocuba)",
+            "center": [
+              -16.84,
+              36.99
+            ],
+            "risk": "high"
+          }
+        ],
+        "risk_hotspots": [
+          {
+            "name": "Quelimane",
+            "center": [
+              -17.88,
+              36.89
+            ],
+            "risk": "high"
+          },
+          {
+            "name": "Mocuba",
+            "center": [
+              -16.84,
+              36.99
+            ],
+            "risk": "high"
+          }
+        ]
+      }
+    },
+    "tete": {
+      "names": [
+        "Tete",
+        "Moatize",
+        "Cahora Bassa",
+        "Angónia",
+        "Angonia",
+        "Changara"
+      ],
+      "country": "Mozambique",
+      "language_default": "Portuguese",
+      "incidence_trend": "High in lowland Zambezi valley; Angónia highlands lower and more seasonal.",
+      "current_status": {
+        "alert_level": "elevated",
+        "headline": "Zambezi valley lowlands elevated; Cahora Bassa dam releases sustain downstream standing water. Angónia highlands lower/seasonal.",
+        "trend": "High in the valley, lower in the highlands.",
+        "as_of": "2026-06",
+        "source": "WHO WMR 2025",
+        "flooding_now": false
+      },
+      "rainfall_flood_status": "Zambezi valley flood exposure; Cahora Bassa dam releases affect downstream standing water.",
+      "season": "Wet season Nov-Mar.",
+      "elevation_flood": "Zambezi valley floor ~100-200 m (hot, low, flood-exposed near Tete/Moatize). Angónia highlands ~1200-1500 m — cooler, lower transmission. Flood-proneness HIGH in valley, LOW in highlands; dam releases raise downstream pooling.",
+      "last_intervention": "IRS in selected districts 2025; ITN 2024.",
+      "resistance_profile": "Pyrethroid resistance present; OP-based IRS effective.",
+      "infrastructure": "Mining corridor logistics in Moatize; rural valley access seasonal.",
+      "vectors": [
+        "An. funestus",
+        "An. arabiensis"
+      ],
+      "geo": {
+        "center": [
+          -15.9,
+          33.2
+        ],
+        "water_bodies": [
+          {
+            "name": "Zambezi River",
+            "type": "river",
+            "path": [
+              [
+                -15.58,
+                32.7
+              ],
+              [
+                -15.9,
+                33.2
+              ],
+              [
+                -16.16,
+                33.59
+              ]
+            ]
+          },
+          {
+            "name": "Cahora Bassa reservoir",
+            "type": "lake",
+            "center": [
+              -15.58,
+              32.7
+            ],
+            "radius_km": 25
+          }
+        ],
+        "low_lying_zones": [
+          {
+            "name": "Zambezi valley floor (Tete)",
+            "center": [
+              -16.16,
+              33.59
+            ],
+            "risk": "high",
+            "note": "Hot low valley"
+          }
+        ],
+        "risk_hotspots": [
+          {
+            "name": "Tete city",
+            "center": [
+              -16.16,
+              33.59
+            ],
+            "risk": "high"
+          },
+          {
+            "name": "Moatize",
+            "center": [
+              -16.12,
+              33.73
+            ],
+            "risk": "high"
+          },
+          {
+            "name": "Angónia (highland)",
+            "center": [
+              -14.75,
+              34.4
+            ],
+            "risk": "low"
+          }
+        ]
+      }
+    },
+    "nampula": {
+      "names": [
+        "Nampula",
+        "Nacala",
+        "Angoche",
+        "Mogovolas",
+        "Meconta",
+        "Ilha de Moçambique"
+      ],
+      "country": "Mozambique",
+      "language_default": "Portuguese",
+      "incidence_trend": "Highest-burden province nationally alongside Zambézia. Very high, year-round transmission.",
+      "current_status": {
+        "alert_level": "elevated",
+        "headline": "Highest-burden province alongside Zambézia; near year-round transmission with perennial breeding habitat.",
+        "trend": "Very high, perennial.",
+        "as_of": "2026-06",
+        "source": "WHO WMR 2025",
+        "flooding_now": false
+      },
+      "rainfall_flood_status": "Coastal/near-coastal high rainfall; perennial breeding habitat.",
+      "season": "Wet season Dec-Apr; transmission near year-round.",
+      "elevation_flood": "Coastal plain rising to interior plateau (~400 m around Nampula city). Near-coastal low-lying around Angoche and Nacala bay. Flood-proneness MODERATE-HIGH near the coast; perennial breeding habitat regardless.",
+      "last_intervention": "ITN mass campaign 2024 (Interceptor G2). EAVE TUBE (In2Care) TRIAL conducted in Nampula — demonstrated 50-70% reduction in mosquito house entry; a candidate for structural scale-up. IRS limited.",
+      "resistance_profile": "High pyrethroid resistance. Eave tubes (In2Care, deploys pyrethroid + fungal biopesticide) and ATSB attractive precisely because they bypass pyrethroid-resistance. OP/clothianidin IRS effective.",
+      "infrastructure": "Nacala port + corridor; large rural hinterland. Annual entomological monitoring site — resistance data relatively current here.",
+      "vectors": [
+        "An. funestus",
+        "An. gambiae s.s.",
+        "An. arabiensis"
+      ],
+      "geo": {
+        "center": [
+          -15.3,
+          39.6
+        ],
+        "water_bodies": [],
+        "low_lying_zones": [
+          {
+            "name": "Angoche coastal lowland",
+            "center": [
+              -16.23,
+              39.91
+            ],
+            "risk": "high",
+            "note": "Near sea level"
+          },
+          {
+            "name": "Nacala bay",
+            "center": [
+              -14.54,
+              40.67
+            ],
+            "risk": "moderate"
+          }
+        ],
+        "risk_hotspots": [
+          {
+            "name": "Nampula city",
+            "center": [
+              -15.12,
+              39.27
+            ],
+            "risk": "very high"
+          },
+          {
+            "name": "Nacala",
+            "center": [
+              -14.54,
+              40.67
+            ],
+            "risk": "high"
+          },
+          {
+            "name": "Angoche",
+            "center": [
+              -16.23,
+              39.91
+            ],
+            "risk": "high"
+          }
+        ]
+      }
+    },
+    "cabo_delgado": {
+      "names": [
+        "Cabo Delgado",
+        "Pemba",
+        "Montepuez",
+        "Mocímboa",
+        "Mocimboa",
+        "Palma",
+        "Macomia"
+      ],
+      "country": "Mozambique",
+      "language_default": "Portuguese",
+      "incidence_trend": "Very high; humanitarian/conflict disruption to services in northern districts complicates coverage.",
+      "current_status": {
+        "alert_level": "elevated",
+        "headline": "Very high burden; insecurity and IDP movement disrupt services and concentrate risk in the north.",
+        "trend": "Very high; coverage fragile.",
+        "as_of": "2026-06",
+        "source": "WHO WMR 2025 + humanitarian reporting",
+        "flooding_now": false
+      },
+      "rainfall_flood_status": "Coastal high rainfall; IDP movement concentrates risk.",
+      "season": "Wet season Dec-Apr.",
+      "elevation_flood": "Coastal lowland to interior plateau (Montepuez ~500 m). Flood-proneness MODERATE near the coast; risk is driven as much by IDP concentration as by elevation.",
+      "last_intervention": "ITN distribution to IDP/host communities 2024; service continuity fragile in conflict-affected districts.",
+      "resistance_profile": "Pyrethroid resistance present; dual-active nets prioritized.",
+      "infrastructure": "Constrained by insecurity in north; Pemba functional. Plan interventions that tolerate access disruption.",
+      "vectors": [
+        "An. funestus",
+        "An. gambiae s.s."
+      ],
+      "geo": {
+        "center": [
+          -12.6,
+          40.0
+        ],
+        "water_bodies": [],
+        "low_lying_zones": [
+          {
+            "name": "Pemba bay coastal",
+            "center": [
+              -12.97,
+              40.52
+            ],
+            "risk": "moderate"
+          }
+        ],
+        "risk_hotspots": [
+          {
+            "name": "Pemba",
+            "center": [
+              -12.97,
+              40.52
+            ],
+            "risk": "high"
+          },
+          {
+            "name": "Montepuez",
+            "center": [
+              -13.13,
+              39.0
+            ],
+            "risk": "high"
+          },
+          {
+            "name": "Mocímboa da Praia",
+            "center": [
+              -11.32,
+              40.35
+            ],
+            "risk": "very high"
+          }
+        ]
+      }
+    },
+    "zomba": {
+      "names": [
+        "Zomba",
+        "Zomba District",
+        "Zomba Malawi"
+      ],
+      "country": "Malawi",
+      "language_default": "Chichewa",
+      "incidence_trend": "High. Southern Malawi (Shire valley + lakeshore) carries the heaviest national burden; Zomba lakeshore and plain are high-transmission.",
+      "current_status": {
+        "alert_level": "normal",
+        "headline": "Dry-season trough (June); transmission builds from November (Jan–Apr peak). Window for planning, not emergency response.",
+        "trend": "High in season; low right now.",
+        "as_of": "2026-06",
+        "source": "WHO WMR 2025",
+        "flooding_now": false
+      },
+      "rainfall_flood_status": "June is dry-season trough. Rains and transmission build from Nov; peak Jan-Apr.",
+      "season": "Wet season Nov-Apr. Transmission peak follows rains by weeks. (If a worker says transmission starts in ~6 weeks from mid-June, that points to an early-season planning window rather than the Nov onset — treat as month-ahead preparation.)",
+      "elevation_flood": "Zomba town ~900 m at the foot of the Zomba Massif (peaks ~2000 m). The Lake Chilwa basin to the east is flat lowland ~620 m and flood-prone. Flood-proneness HIGH in the basin/plain, LOW on the plateau — target the lowland, not the massif.",
+      "last_intervention": "ITN mass campaign 2024 (national, Royal Guard/Interceptor G2 mix). IRS not routine in Zomba. SMC piloted in southern districts; IPTp routine in ANC.",
+      "resistance_profile": "Pyrethroid resistance confirmed in An. funestus across southern Malawi; chlorfenapyr (Interceptor G2) and OP-based IRS effective. PBO and dual-active nets prioritized.",
+      "infrastructure": "Reasonable — Zomba town, district health office, ANC network for IPTp; under-5 reach for SMC via health posts.",
+      "vectors": [
+        "An. funestus",
+        "An. arabiensis"
+      ],
+      "geo": {
+        "center": [
+          -15.35,
+          35.45
+        ],
+        "water_bodies": [
+          {
+            "name": "Lake Chilwa",
+            "type": "lake",
+            "center": [
+              -15.3,
+              35.7
+            ],
+            "radius_km": 20
+          },
+          {
+            "name": "Shire River",
+            "type": "river",
+            "path": [
+              [
+                -15.06,
+                35.23
+              ],
+              [
+                -15.3,
+                35.1
+              ],
+              [
+                -15.6,
+                35.05
+              ]
+            ]
+          }
+        ],
+        "low_lying_zones": [
+          {
+            "name": "Lake Chilwa shoreline plain",
+            "center": [
+              -15.3,
+              35.58
+            ],
+            "risk": "very high",
+            "note": "Flat ~620 m lowland, floods readily"
+          }
+        ],
+        "risk_hotspots": [
+          {
+            "name": "Zomba town",
+            "center": [
+              -15.39,
+              35.32
+            ],
+            "risk": "high"
+          },
+          {
+            "name": "Lakeshore communities",
+            "center": [
+              -15.3,
+              35.58
+            ],
+            "risk": "very high"
+          },
+          {
+            "name": "Zomba plateau",
+            "center": [
+              -15.32,
+              35.3
+            ],
+            "risk": "low"
+          }
+        ]
+      }
+    },
+    "machinga": {
+      "names": [
+        "Machinga",
+        "Machinga District",
+        "Liwonde",
+        "Machinga Malawi"
+      ],
+      "country": "Malawi",
+      "language_default": "Chichewa",
+      "incidence_trend": "Very high. Lakeshore/Lake Chilwa basin district in southern Malawi; among the highest-burden districts nationally.",
+      "current_status": {
+        "alert_level": "normal",
+        "headline": "Dry-season trough now; the Lake Chilwa basin becomes prime larval habitat fast once early rains arrive — watch for the first rains.",
+        "trend": "Very high in season; low right now.",
+        "as_of": "2026-06",
+        "source": "WHO WMR 2025",
+        "flooding_now": false
+      },
+      "rainfall_flood_status": "Lake Chilwa basin — flood-prone, abundant standing water when rains arrive. Early rains create extensive larval habitat quickly.",
+      "season": "Wet season Nov-Apr; lake-basin flooding amplifies breeding. Early rains => immediate larval-source risk.",
+      "elevation_flood": "Low-lying Lake Chilwa basin (~620 m) and Shire valley at Liwonde — flat, broad, abundant standing water when rains arrive. Flood-proneness VERY HIGH; this is prime larval habitat and the reason larviciding leads here.",
+      "last_intervention": "ITN mass campaign 2024 (Interceptor G2). IRS not routine. IPTp routine in ANC; SMC in catchment of southern districts.",
+      "resistance_profile": "Pyrethroid resistance confirmed (An. funestus). Dual-active nets, larviciding (Bti — biological, no resistance concern), and OP-based IRS effective. Larviciding is resistance-agnostic and ideal for acute flood response.",
+      "infrastructure": "Liwonde as district hub; lakeshore communities more dispersed. Bti and larval source management feasible around defined water bodies.",
+      "vectors": [
+        "An. funestus",
+        "An. arabiensis"
+      ],
+      "geo": {
+        "center": [
+          -14.97,
+          35.5
+        ],
+        "water_bodies": [
+          {
+            "name": "Lake Chilwa",
+            "type": "lake",
+            "center": [
+              -15.05,
+              35.75
+            ],
+            "radius_km": 20
+          },
+          {
+            "name": "Shire River (Liwonde)",
+            "type": "river",
+            "path": [
+              [
+                -15.06,
+                35.23
+              ],
+              [
+                -14.95,
+                35.2
+              ],
+              [
+                -14.85,
+                35.18
+              ]
+            ]
+          }
+        ],
+        "low_lying_zones": [
+          {
+            "name": "Lake Chilwa basin floodplain",
+            "center": [
+              -14.95,
+              35.7
+            ],
+            "risk": "very high",
+            "note": "Flat ~620 m, floods readily"
+          },
+          {
+            "name": "Shire floodplain (Liwonde)",
+            "center": [
+              -15.06,
+              35.23
+            ],
+            "risk": "high"
+          }
+        ],
+        "risk_hotspots": [
+          {
+            "name": "Liwonde",
+            "center": [
+              -15.06,
+              35.23
+            ],
+            "risk": "high"
+          },
+          {
+            "name": "Lakeshore communities",
+            "center": [
+              -14.95,
+              35.7
+            ],
+            "risk": "very high"
+          }
+        ]
+      }
+    }
+  }
+}
