@@ -48,6 +48,34 @@ _ASSETS_DIR = config.ROOT / "assets"
 _ASSETS_DIR.mkdir(parents=True, exist_ok=True)
 app.mount("/assets", StaticFiles(directory=str(_ASSETS_DIR)), name="assets")
 
+
+def _prewarm() -> None:
+    """Build matplotlib's font cache + pre-render every region's choropleth at
+    boot, so the FIRST chat message doesn't pay the cold-start render cost.
+
+    On a fresh container (e.g. Railway) the first matplotlib render otherwise
+    eats 5-10s building the font cache; doing it here moves that off the user's
+    first message. Best-effort — failures never block startup.
+    """
+    try:
+        for key in data.regions():
+            rec = data.region_record(key)
+            country = (rec or {}).get("country")
+            if country:
+                try:
+                    choropleth.render_choropleth(country, key)  # cached after first
+                except Exception:
+                    log.debug("prewarm render failed for %s", key, exc_info=True)
+        log.info("Map pre-warm complete (%d regions cached).", len(data.regions()))
+    except Exception:
+        log.warning("Map pre-warm skipped", exc_info=True)
+
+
+@app.on_event("startup")
+def _on_startup() -> None:
+    # Run in the background so the server starts accepting traffic immediately.
+    threading.Thread(target=_prewarm, daemon=True).start()
+
 # Instant holding reply, sent the moment a message arrives (in the worker's
 # detected language) while the specialist answer is prepared on a background
 # thread. Keeps the worker engaged and sidesteps Twilio's ~15s webhook timeout.
@@ -371,7 +399,13 @@ def message_json(payload: dict):
     if not message:
         return JSONResponse({"error": "missing 'message' (or lat/lon)"}, status_code=400)
 
-    reply, media_url, region_key = build_reply(phone, message, pin=pin, pin_region=pin_region)
+    try:
+        reply, media_url, region_key = build_reply(phone, message, pin=pin, pin_region=pin_region)
+    except Exception as e:  # surface a useful JSON error instead of a raw 500
+        log.exception("Chat /message failed")
+        detail = f"{type(e).__name__}: {e}"
+        return JSONResponse(
+            {"error": f"The agent hit an error. {detail}"}, status_code=500)
     return {
         "phone": phone,
         "region": region_key,

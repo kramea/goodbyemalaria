@@ -194,12 +194,15 @@ def specialist(
               if first_contact else
               ("This is a FOLLOW-UP in an ongoing chat — answer the specific question "
                "directly and concretely; do NOT re-greet or restate the whole triage.")]
+    parts += ["", "LENGTH: keep it short — a tight WhatsApp message (aim for under "
+              "~140 words). Lead with the key action; cut hedging and background. "
+              "Finish your last sentence — never trail off mid-thought."]
     parts += ["", f'FIELD WORKER MESSAGE:\n"{message}"']
 
     system = prompts.SPECIALIST_SYSTEM.replace("{playbook}", playbook)
     resp = _create(
         model=config.SPECIALIST_MODEL,
-        max_tokens=1200,
+        max_tokens=700,
         system=system,
         messages=[{"role": "user", "content": "\n".join(parts)}],
     )
