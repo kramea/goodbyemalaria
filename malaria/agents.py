@@ -222,22 +222,26 @@ def specialist(
     if session_context:
         parts += ["", "PRIOR CONVERSATION (same worker — continue in the same "
                   "language, build on it):", session_context]
-    parts += ["", ("This is the worker's FIRST substantive reply — give the situation "
-                   "and the ⚡/📅/🌧️ options. Do NOT greet (already done).")
+    parts += ["", ("This is the worker's FIRST substantive reply — give a quick one-line "
+                   "situation read, then ONE next step OR one focused question to narrow "
+                   "what they need. Do NOT dump all three time horizons or a long plan; "
+                   "offer the rest and let them pull it. Do NOT greet (already done).")
               if first_contact else
-              ("This is a FOLLOW-UP in an ongoing chat — answer the specific question "
-               "directly and concretely; do NOT re-greet or restate the whole triage.")]
-    parts += ["", "LENGTH: keep it tight and WhatsApp-friendly — aim for ~130 "
-              "words, and only go a little longer when the question genuinely needs "
-              "the detail. Lead with the key action; cut hedging and preamble. "
-              "Always finish your last sentence — never trail off mid-thought."]
+              ("This is a FOLLOW-UP in an ongoing chat — answer just the specific question, "
+               "one step at a time. Do NOT re-greet or restate the whole triage. Keep "
+               "building toward a single concrete action.")]
+    parts += ["", "LENGTH: bite-sized, like a real WhatsApp text — usually 2-4 short "
+              "lines (~60 words). One idea per message. Lead with the answer, cut "
+              "preamble and hedging, and end with a single question or next step. Go "
+              "a little longer ONLY for an active outbreak/flood. Always finish your "
+              "last sentence — never trail off mid-thought."]
     parts += ["", f'FIELD WORKER MESSAGE:\n"{message}"']
 
     system = prompts.SPECIALIST_SYSTEM.replace("{playbook}", playbook)
     resp = _create(
         on_token=on_token,
         model=config.SPECIALIST_MODEL,
-        max_tokens=1100,
+        max_tokens=500,  # bite-sized replies; ample headroom for an outbreak/flood turn
         system=system,
         messages=[{"role": "user", "content": "\n".join(parts)}],
     )

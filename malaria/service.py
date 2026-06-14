@@ -17,7 +17,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from concurrent.futures import TimeoutError as FuturesTimeout
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Callable, Optional, Tuple
 
 from . import (adversarial, agents, config, data, dhis2, flood,
@@ -122,12 +122,18 @@ def build_enriched_context(region_key, country, rec, results, heal_warning="") -
     proxies (noted inline) rather than silently empty fields."""
     cs = (rec or {}).get("current_status") or {}
     zone_name = (region_key or country or "the area").replace("_", " ").title()
-    ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M")
+    # Mozambique & Malawi are both Central Africa Time (UTC+2, no DST). Give the
+    # worker's LOCAL day-of-week explicitly so the model never has to compute a
+    # weekday from a date (it gets that wrong — e.g. "Friday" when it's Sunday).
+    now_cat = datetime.now(timezone.utc) + timedelta(hours=2)
+    today = now_cat.strftime("%A %d %B %Y, %H:%M")
     L = []
     if heal_warning:
         L += [f"⚠️ {heal_warning}", ""]
     L += [f"=== LIVE SITUATION BRIEF — {zone_name}, {country or 'national'} ===",
-          f"Generated: {ts} UTC", ""]
+          f"TODAY is {today} (Central Africa Time). Use THIS exact day and date for any "
+          f"day-of-week or 'today/tomorrow' reference — never infer the weekday yourself.",
+          ""]
 
     # District status (curated KB)
     L += ["── DISTRICT STATUS (curated KB) ──"]
