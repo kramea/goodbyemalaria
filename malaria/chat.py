@@ -159,31 +159,52 @@ def render_chat(public_base_url: str = "", whatsapp_number: str = "") -> str:
       +'<br><br>Olá! · Bonjour! · Moni!', true);
   }}
 
-  let busy=false;
+  let busy=false, hintEl=null;
+  function setBusy(b){{ busy=b; send.disabled=b; inp.disabled=b; }}
+  function flashHint(){{
+    if(hintEl) return;
+    hintEl=document.createElement('div'); hintEl.className='sys';
+    hintEl.textContent='⏳ Still answering your last message — one sec…';
+    inner.appendChild(hintEl); scroll();
+    setTimeout(()=>{{ if(hintEl){{ hintEl.remove(); hintEl=null; }} }}, 1800);
+  }}
+
   async function ask(text){{
-    if(busy || !text.trim()) return;
-    busy=true; send.disabled=true; chips.style.display='none';
+    text=(text||'').trim();
+    if(!text) return;
+    if(busy){{ flashHint(); return; }}   // block + visibly tell the user we're still working
+    setBusy(true); chips.style.display='none';
     bubble('me', fmt(text), true);
     inp.value=''; inp.style.height='auto';
     const typingRow=document.createElement('div'); typingRow.className='row them';
     typingRow.innerHTML='<div class="bub"><span class="typing"><i></i><i></i><i></i></span></div>';
     inner.appendChild(typingRow); scroll();
+    const ctrl=new AbortController();
+    const timer=setTimeout(()=>ctrl.abort(), 75000);   // never spin forever
     try{{
       const r=await fetch('/message',{{method:'POST',headers:{{'content-type':'application/json'}},
-        body:JSON.stringify({{phone:phone,message:text}})}});
-      const j=await r.json();
-      typingRow.remove();
-      if(j.error){{ sys('⚠️ '+j.error); }}
-      else{{
-        let html=fmt(j.reply||'');
+        body:JSON.stringify({{phone:phone,message:text}}), signal:ctrl.signal}});
+      let j=null, raw='';
+      try{{ j=await r.json(); }}catch(_){{ try{{ raw=await r.text(); }}catch(_2){{}} }}
+      if(j && j.reply!=null){{
+        let html=fmt(j.reply);
         if(j.map_url){{ html+='<img src="'+j.map_url+'" alt="alert map" loading="lazy"/>'; }}
-        bubble('them', html, true);
+        const b=bubble('them', html, true);
+        const img=b.querySelector('img'); if(img){{ img.onload=scroll; img.onerror=scroll; }}
+      }}else if(j && j.error){{
+        sys('⚠️ '+j.error);
+      }}else{{
+        sys('⚠️ Unexpected response ('+r.status+'). '+(raw?raw.slice(0,140):''));
       }}
     }}catch(e){{
-      typingRow.remove();
-      sys('⚠️ Network error — is the server running? '+e);
+      sys(e.name==='AbortError' ? '⏱️ That took too long — please send it again.'
+                                : '⚠️ Network error — please try again. '+e);
+    }}finally{{
+      clearTimeout(timer);
+      typingRow.remove();      // ALWAYS clear the dots, success or failure
+      setBusy(false);
+      inp.focus(); scroll();
     }}
-    busy=false; send.disabled=false; inp.focus();
   }}
 
   send.addEventListener('click',()=>ask(inp.value));
