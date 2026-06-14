@@ -33,5 +33,6 @@ Thumbs.db
 # Live-data fetcher caches (regenerated at runtime)
 knowledge/reliefweb_cache.json
 knowledge/historical_weather_cache.json
+knowledge/forecast_cache.json
 knowledge/dhis2_cache.json
 knowledge/pmi_cache_*.json

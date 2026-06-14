@@ -15,6 +15,7 @@ import json
 import logging
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import TimeoutError as FuturesTimeout
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Callable, Optional, Tuple
@@ -79,14 +80,27 @@ def _fetch_all(country, coords, rec, needs_weather, is_triage) -> dict:
 
     results = {}
     if tasks:
-        with ThreadPoolExecutor(max_workers=len(tasks)) as ex:
-            futs = {ex.submit(fn): name for name, fn in tasks.items()}
-            for fut in as_completed(futs):
+        # Hard overall deadline: a single slow source (e.g. a PMI cache miss that
+        # falls back to a 30s download) must not stall the whole turn. Whatever
+        # hasn't returned by the deadline is treated as MISSING; build_enriched_
+        # context then substitutes curated-KB proxies for it. We don't block on
+        # shutdown — stragglers finish (or hit their own socket timeout) detached.
+        deadline = config.FETCH_TIMEOUT + 1.0
+        ex = ThreadPoolExecutor(max_workers=len(tasks))
+        futs = {ex.submit(fn): name for name, fn in tasks.items()}
+        try:
+            for fut in as_completed(futs, timeout=deadline):
                 name = futs[fut]
                 try:
                     results[name] = fut.result()
                 except Exception as e:  # pragma: no cover
                     results[name] = {"ok": False, "summary": "", "data": {}, "error": str(e)}
+        except FuturesTimeout:
+            pass
+        for fut, name in futs.items():
+            results.setdefault(name, {"ok": False, "summary": "", "data": {},
+                                      "error": "fetch deadline exceeded"})
+        ex.shutdown(wait=False, cancel_futures=True)
     # Normalise the string-returning sources into the contract shape.
     for k in ("weather", "who"):
         v = results.get(k)
@@ -274,6 +288,7 @@ def handle_message(
     pin_region: Optional[str] = None,
     precomputed_route: "Optional[agents.Route]" = None,
     on_step: Optional[Callable[[str, dict], None]] = None,
+    on_token: Optional[Callable[[str], None]] = None,
 ) -> Reply:
     step = on_step or _noop
     session = memory.load(phone)
@@ -281,14 +296,9 @@ def handle_message(
     context = memory.context_for(session)
     _t0 = time.perf_counter()
 
-    # 1) Router.
-    r = precomputed_route or agents.route(message, session_context=context)
-    language = session.get("language") or r.language
-    session["language"] = language
-    step("route", {"language": language, "intent": r.intent, "intervention": r.intervention,
-                   "needs_weather": r.needs_weather})
-
-    # 2) Resolve area (pin > region in msg > country in msg > session continuity).
+    # 1) Resolve the area DETERMINISTICALLY (text match, no model). Doing this
+    #    first means the live-data fetch no longer has to wait on the router —
+    #    the two slowest steps can run concurrently (see step 2).
     explicit_region = pin_region or data.match_region_by_text(message)
     explicit_country = data.match_country_by_text(message)
     if explicit_region:
@@ -315,25 +325,59 @@ def handle_message(
     cs = (rec or {}).get("current_status") or {}
     alert = cs.get("alert_level", "")
     flooding = bool(cs.get("flooding_now"))
-    is_triage = (r.intent == "triage" or r.intervention == "triage")
 
-    # 3) Fetch live data in parallel.
+    # 2) Router + FAST live-data fetch IN PARALLEL. The fast sources are cached/
+    #    quick (<1s); the live rain FORECAST is the one slow source (~5s), and most
+    #    questions ("how's the situation?") don't need it — curated seasonality
+    #    covers them. So we fetch everything-but-weather alongside the router, then
+    #    fetch weather serially ONLY when the router flags the question needs it.
+    #    This takes a "situation" turn's pre-answer wait from ~4s down to ~1s.
     _tf = time.perf_counter()
-    results = _fetch_all(country, coords, rec, r.needs_weather, is_triage)
+    with ThreadPoolExecutor(max_workers=2) as ex:
+        f_route = ex.submit(
+            lambda: precomputed_route or agents.route(message, session_context=context))
+        f_fetch = ex.submit(_fetch_all, country, coords, rec, False, True)
+        r = f_route.result()
+        results = f_fetch.result()
+
+    if r.needs_weather and coords:
+        # Hard-cap the slow forecast so it can't blow the turn; KB seasonality is
+        # the fallback. Detached shutdown so a slow socket never blocks us.
+        wex = ThreadPoolExecutor(max_workers=1)
+        fut = wex.submit(weather.forecast_summary, *coords)
+        try:
+            wx = fut.result(timeout=config.FETCH_TIMEOUT)
+            results["weather"] = {"ok": bool((wx or "").strip()), "summary": wx,
+                                  "data": {}, "error": None}
+        except Exception:
+            results["weather"] = {"ok": False, "summary": "", "data": {},
+                                  "error": "forecast slow/unavailable"}
+        wex.shutdown(wait=False, cancel_futures=True)
+
     if flooding and coords:  # extra flood discharge signal when actively flooding
         fs = flood.discharge_summary(*coords)
         if fs:
             results.setdefault("historical", {})
             results["flood_signal"] = {"ok": True, "summary": fs, "data": {}}
     _t_fetch = time.perf_counter() - _tf
+
+    language = session.get("language") or r.language
+    session["language"] = language
+    is_triage = (r.intent == "triage" or r.intervention == "triage")
+    step("route", {"language": language, "intent": r.intent, "intervention": r.intervention,
+                   "needs_weather": r.needs_weather})
     step("fetch", {"sources": {k: bool(v.get("ok")) for k, v in results.items()},
                    "seconds": round(_t_fetch, 1)})
 
-    # 4) Self-healing data-quality check.
+    # 4) Self-healing data-quality check. The quality report is computed in code
+    #    (cheap) and the situation brief already substitutes curated-KB proxies
+    #    for any missing source inline, so on the live path we SKIP the extra
+    #    LLM advisory call — it only adds latency. DEMO_MODE still runs it to
+    #    narrate the self-healing reasoning.
     quality = self_healing.build_quality_report(results)
     heal = None
     heal_warning = ""
-    if quality["has_issues"] or config.DEMO_MODE:
+    if config.DEMO_MODE:
         heal = self_healing.run(quality["report"])
         if heal and heal.specialist_warning:
             heal_warning = heal.specialist_warning
@@ -377,18 +421,24 @@ def handle_message(
 
     # 7) Specialist draft.
     _ts = time.perf_counter()
+    # Stream specialist tokens to the caller only on the live path: in DEMO_MODE
+    # the adversarial reviewer may rewrite the draft, so streaming the draft would
+    # then be replaced by a different final answer — confusing. There we keep the
+    # draft un-streamed and emit the (possibly revised) final at the end.
     draft = agents.specialist(
         message, playbook=playbook, data_block=data_block, weather_summary="",
-        session_context=context, first_contact=first, language=language)
+        session_context=context, first_contact=first, language=language,
+        on_token=(None if config.DEMO_MODE else on_token))
     _t_spec = time.perf_counter() - _ts
     step("specialist", {"draft": draft, "seconds": round(_t_spec, 1)})
 
-    # 8) Adversarial review.
-    #    DEMO_MODE: always run (showpiece). Production: skip when pre-reasoned
-    #    (already validated offline); otherwise review.
+    # 8) Adversarial review (devil's advocate + field realism + orchestrator).
+    #    This is 3 extra model calls AFTER we already have a good answer — the
+    #    single biggest latency cost on the live path — so production SKIPS it.
+    #    DEMO_MODE still runs it as the multi-agent showpiece.
     final = draft
     devil = realism = None
-    run_adv = config.DEMO_MODE or not use_pre_reasoned
+    run_adv = config.DEMO_MODE
     if run_adv:
         _ta = time.perf_counter()
         final, devil, realism = adversarial.review(draft, brief, language)

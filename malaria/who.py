@@ -14,10 +14,11 @@ import urllib.request
 from pathlib import Path
 from typing import Optional
 
+from . import config
 from .config import ROOT
 
 _BASE = "https://ghoapi.azureedge.net/api"
-_TIMEOUT = 6
+_TIMEOUT = config.FETCH_TIMEOUT
 _ISO = {"Mozambique": "MOZ", "Malawi": "MWI"}
 
 # Persisted cache: WHO national figures change annually, so fetch once and reuse

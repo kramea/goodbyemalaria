@@ -56,22 +56,30 @@ def _text(response) -> str:
     return "".join(b.text for b in response.content if b.type == "text").strip()
 
 
-def _create(**kwargs):
+def _create(on_token=None, **kwargs):
     """Stream the response and return the final Message.
 
     Streaming keeps data flowing token-by-token, so the read timeout applies to
     the gap BETWEEN chunks rather than to the whole (possibly long) generation.
     On a flaky connection this is what prevents a request from stalling until the
     timeout fires. Falls back gracefully if 'thinking' is unsupported.
+
+    If on_token is given, each text delta is handed to it as it arrives (used to
+    stream the live reply to the browser so the worker sees words in ~0.6s instead
+    of waiting for the whole answer).
     """
-    try:
+    def _run():
         with client().messages.stream(**kwargs) as stream:
+            if on_token:
+                for delta in stream.text_stream:
+                    on_token(delta)
             return stream.get_final_message()
+    try:
+        return _run()
     except (TypeError, anthropic.BadRequestError) as e:
         if "thinking" in str(e).lower() and "thinking" in kwargs:
             kwargs.pop("thinking", None)
-            with client().messages.stream(**kwargs) as stream:
-                return stream.get_final_message()
+            return _run()
         raise
 
 
@@ -200,6 +208,7 @@ def specialist(
     session_context: str = "",
     first_contact: bool = True,
     language: str = "",
+    on_token=None,
 ) -> str:
     parts: List[str] = []
     if language:
@@ -218,14 +227,15 @@ def specialist(
               if first_contact else
               ("This is a FOLLOW-UP in an ongoing chat — answer the specific question "
                "directly and concretely; do NOT re-greet or restate the whole triage.")]
-    parts += ["", "LENGTH: keep it focused and WhatsApp-friendly — aim for ~180 "
-              "words, and use a little more only when the question genuinely needs "
-              "the detail. Lead with the key action; trim hedging. Always finish "
-              "your last sentence — never trail off mid-thought."]
+    parts += ["", "LENGTH: keep it tight and WhatsApp-friendly — aim for ~130 "
+              "words, and only go a little longer when the question genuinely needs "
+              "the detail. Lead with the key action; cut hedging and preamble. "
+              "Always finish your last sentence — never trail off mid-thought."]
     parts += ["", f'FIELD WORKER MESSAGE:\n"{message}"']
 
     system = prompts.SPECIALIST_SYSTEM.replace("{playbook}", playbook)
     resp = _create(
+        on_token=on_token,
         model=config.SPECIALIST_MODEL,
         max_tokens=1100,
         system=system,

@@ -81,6 +81,10 @@ FETCH_TIMEOUT = float(os.getenv("MALARIA_FETCH_TIMEOUT", "6"))
 # Cache TTLs (seconds).
 RELIEFWEB_TTL = int(os.getenv("MALARIA_RELIEFWEB_TTL", str(6 * 3600)))      # 6h
 HISTORICAL_TTL = int(os.getenv("MALARIA_HISTORICAL_TTL", str(6 * 3600)))    # 6h
+# Live rain forecast: short TTL (daily-resolution data, updated ~hourly upstream),
+# disk-cached so repeat spray-timing questions for an area answer instantly and
+# survive restarts. 2h keeps it fresh enough for spray decisions.
+FORECAST_TTL = int(os.getenv("MALARIA_FORECAST_TTL", str(2 * 3600)))        # 2h
 DHIS2_TTL = int(os.getenv("MALARIA_DHIS2_TTL", str(6 * 3600)))             # 6h
 PMI_TTL = int(os.getenv("MALARIA_PMI_TTL", str(7 * 24 * 3600)))           # 7d
 

@@ -292,7 +292,50 @@ def render_chat(public_base_url: str = "", whatsapp_number: str = "", demo_mode:
     }}
   }}
 
-  const dispatch = (t) => DEMO ? askStream(t) : ask(t);
+  // ---- Live path: stream the specialist's words token-by-token (feels instant) ----
+  async function askLive(text){{
+    text=(text||'').trim(); if(!text) return;
+    if(busy){{ flashHint(); return; }}
+    const myTurn=++turnSeq, myPhone=phone;
+    setBusy(true); chips.style.display='none';
+    bubble('me', fmt(text), true);
+    inp.value=''; inp.style.height='auto';
+    const typingRow=document.createElement('div'); typingRow.className='row them';
+    typingRow.innerHTML='<div class="bub"><span class="typing"><i></i><i></i><i></i></span></div>';
+    inner.appendChild(typingRow); scroll();
+    const ctrl=new AbortController(); inflight=ctrl;
+    const timer=setTimeout(()=>ctrl.abort(), 75000);
+    let acc='', txtEl=null;
+    const ensureBubble=()=>{{ if(!txtEl){{ if(typingRow.parentNode) typingRow.remove();
+      const b=bubble('them','<span class="txt"></span>',true); txtEl=b.querySelector('.txt'); }} }};
+    try{{
+      const r=await fetch('/message/stream',{{method:'POST',headers:{{'content-type':'application/json'}},
+        body:JSON.stringify({{phone:myPhone,message:text}}), signal:ctrl.signal}});
+      const reader=r.body.getReader(); const dec=new TextDecoder(); let buf='';
+      while(true){{
+        const {{value,done}}=await reader.read(); if(done) break;
+        buf+=dec.decode(value,{{stream:true}});
+        let i; while((i=buf.indexOf('\\n\\n'))>=0){{
+          const chunk=buf.slice(0,i); buf=buf.slice(i+2);
+          if(!chunk.startsWith('data: ')) continue;
+          let ev; try{{ ev=JSON.parse(chunk.slice(6)); }}catch(_){{ continue; }}
+          if(myTurn!==turnSeq) continue;
+          if(ev.type==='token'){{ ensureBubble(); acc+=ev.text||''; txtEl.innerHTML=fmt(acc); scroll(); }}
+          else if(ev.type==='final'){{ ensureBubble(); acc=ev.reply||acc; txtEl.innerHTML=fmt(acc); scroll(); }}
+          else if(ev.type==='error'){{ if(typingRow.parentNode) typingRow.remove(); sys('⚠️ '+ev.error); }}
+        }}
+      }}
+    }}catch(e){{
+      if(myTurn===turnSeq) sys(e.name==='AbortError' ? '⏱️ That took too long — please send it again.'
+                                                      : '⚠️ Network error — please try again. '+e);
+    }}finally{{
+      clearTimeout(timer); if(inflight===ctrl) inflight=null;
+      if(typingRow.parentNode) typingRow.remove();
+      if(myTurn===turnSeq){{ setBusy(false); inp.focus(); scroll(); }}
+    }}
+  }}
+
+  const dispatch = (t) => DEMO ? askStream(t) : askLive(t);
   send.addEventListener('click',()=>dispatch(inp.value));
   inp.addEventListener('keydown',e=>{{ if(e.key==='Enter' && !e.shiftKey){{ e.preventDefault(); dispatch(inp.value); }} }});
   inp.addEventListener('input',()=>{{ inp.style.height='auto'; inp.style.height=Math.min(inp.scrollHeight,120)+'px'; }});

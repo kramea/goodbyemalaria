@@ -274,9 +274,11 @@ def build_reply(phone: str, message: str, pin: Optional[Tuple[float, float]] = N
     reply = result.text
     region_key = result.region_key
 
-    # Map only on the first message and a closing message (service sets show_map).
+    # Map only on the first message and a closing message (service sets show_map),
+    # and only when SEND_MAPS is on. Disabled => text-only replies everywhere
+    # (web chat and WhatsApp) with no PNG attachment and no interactive-map link.
     media_url = None
-    if region_key and result.show_map:
+    if config.SEND_MAPS and region_key and result.show_map:
         media_url = _media_url_for(region_key, pin)
         app_url = _app_link_for(region_key, pin)
         if app_url:
@@ -438,9 +440,16 @@ def message_stream(payload: dict):
     def on_step(stage: str, data: dict) -> None:
         q.put({"type": "step", "stage": stage, "data": data})
 
+    def on_token(text: str) -> None:
+        q.put({"type": "token", "text": text})
+
     def run() -> None:
         try:
-            result = handle_message(phone, message, on_step=on_step)
+            # Stream the specialist's words to the browser as they generate (first
+            # token in ~0.6s). DEMO_MODE narrates pipeline stages instead, so we
+            # pass no token callback there (service also guards this).
+            token_cb = None if config.DEMO_MODE else on_token
+            result = handle_message(phone, message, on_step=on_step, on_token=token_cb)
             media = None
             if result.show_map and result.region_key:
                 media = _media_url_for(result.region_key, None)

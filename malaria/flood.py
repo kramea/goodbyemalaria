@@ -14,8 +14,10 @@ import json
 from statistics import median
 from typing import Optional
 
+from . import config
+
 _ENDPOINT = "https://flood-api.open-meteo.com/v1/flood"
-_TIMEOUT = 6
+_TIMEOUT = config.FETCH_TIMEOUT
 _cache: dict = {}
 
 

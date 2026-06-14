@@ -7,23 +7,51 @@ empty string when offline so the agent simply falls back to curated seasonality.
 """
 
 import json
+import time
 import urllib.parse
 import urllib.request
 from datetime import date
 from typing import Optional
 
-_ENDPOINT = "https://api.open-meteo.com/v1/forecast"
-_TIMEOUT = 6  # seconds — keep the WhatsApp round-trip snappy
+from . import config
 
-# Tiny per-process cache keyed by rounded coords so repeated turns in one
-# conversation don't re-hit the API.
-_cache: dict = {}
+_ENDPOINT = "https://api.open-meteo.com/v1/forecast"
+_TIMEOUT = config.FETCH_TIMEOUT  # single knob (MALARIA_FETCH_TIMEOUT) for all live fetchers
+
+# Disk cache keyed by rounded "lat,lon,days"; entries hold {"ts", "data"} and are
+# reused until older than config.FORECAST_TTL. Persisted so repeat spray-timing
+# questions for an area answer instantly and survive restarts. Loaded once into
+# the module global, then kept in sync on write.
+_CACHE_FILE = config.ROOT / "knowledge" / "forecast_cache.json"
+_cache: Optional[dict] = None
+
+
+def _load_cache() -> dict:
+    global _cache
+    if _cache is None:
+        try:
+            _cache = json.loads(_CACHE_FILE.read_text(encoding="utf-8"))
+        except Exception:
+            _cache = {}
+    return _cache
+
+
+def _save_cache() -> None:
+    try:
+        _CACHE_FILE.parent.mkdir(parents=True, exist_ok=True)
+        _CACHE_FILE.write_text(json.dumps(_cache, ensure_ascii=False, indent=2), encoding="utf-8")
+    except Exception:
+        pass
 
 
 def _fetch(lat: float, lon: float, days: int = 4) -> Optional[dict]:
-    key = (round(lat, 2), round(lon, 2), days)
-    if key in _cache:
-        return _cache[key]
+    key = f"{round(lat, 2)},{round(lon, 2)},{days}"
+    cache = _load_cache()
+    entry = cache.get(key)
+    if isinstance(entry, dict):
+        ts = entry.get("ts", 0)
+        if (time.time() - ts) < config.FORECAST_TTL and isinstance(entry.get("data"), dict):
+            return entry["data"]
     params = {
         "latitude": f"{lat:.4f}",
         "longitude": f"{lon:.4f}",
@@ -36,9 +64,14 @@ def _fetch(lat: float, lon: float, days: int = 4) -> Optional[dict]:
         req = urllib.request.Request(url, headers={"User-Agent": "MalarIA/1.0"})
         with urllib.request.urlopen(req, timeout=_TIMEOUT) as resp:
             data = json.loads(resp.read().decode("utf-8"))
-        _cache[key] = data
+        cache[key] = {"ts": time.time(), "data": data}
+        _save_cache()
         return data
     except Exception:
+        # Network slow/down (e.g. the 3s cap fired): a slightly stale forecast
+        # beats none for spray timing, so serve the last cached one if we have it.
+        if isinstance(entry, dict) and isinstance(entry.get("data"), dict):
+            return entry["data"]
         return None
 
 
