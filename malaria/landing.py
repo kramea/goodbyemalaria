@@ -233,8 +233,8 @@ def render_landing(public_base_url: str = "", whatsapp_number: str = "+1 415 523
 <section id="reality"><div class="wrap">
   <div class="eyebrow">The reality</div>
   <h2>A preventable disease, still taking lives</h2>
-  <p class="sub">Malaria is curable and preventable — yet it remains one of the deadliest diseases on Earth,
-    and sub-Saharan Africa carries almost the entire burden.</p>
+  <p class="sub">It remains one of the deadliest diseases on Earth — and sub-Saharan Africa carries
+    almost the entire burden.</p>
   <div class="stats">
     <div class="stat"><div class="n">263M</div><div class="l">malaria cases worldwide in 2023 (WHO)</div></div>
     <div class="stat"><div class="n">~597K</div><div class="l">deaths in 2023 — mostly children under 5</div></div>
@@ -260,10 +260,9 @@ def render_landing(public_base_url: str = "", whatsapp_number: str = "+1 415 523
     treating a pool of water, hanging a net — at exactly the moment it counts. They walk the last mile, in the
     heat and the rain, carrying the entire fight on their backs.</p>
   {gallery}
-  <p class="sub" style="color:#d8c8b8;max-width:780px;margin-top:26px">Every one of these actions only works in a
-    narrow window. Get there in time and a village is protected. Arrive late — after the rains, after the hatch,
-    after the peak — and the very same effort is wasted. <b style="color:#fff">MalarIA exists to make sure the
-    field worker always knows the window.</b></p>
+  <p class="sub" style="color:#d8c8b8;max-width:780px;margin-top:26px">But the same action only counts if it lands at
+    the right moment. <b style="color:#fff">MalarIA exists to make sure the field worker always knows that moment</b>
+    — which tool, where, and when.</p>
 </div></section>
 
 <!-- INTERVENTIONS -->
@@ -317,10 +316,10 @@ def render_landing(public_base_url: str = "", whatsapp_number: str = "+1 415 523
 <section id="timing"><div class="wrap">
   <div class="eyebrow">Why timing wins</div>
   <h2>The same tool can save a village — or be wasted</h2>
-  <p class="sub">Whether an intervention works depends on conditions that change week to week. These are exactly
-    what MalarIA reasons over, live, so the field worker acts inside the window — not outside it.</p>
+  <p class="sub">Whether a tool works depends on conditions that change week to week — exactly what MalarIA
+    checks live before it answers.</p>
   <div class="factors">
-    <div class="factor"><div class="ico">🌧️</div><h3>Weather</h3><p>Spray on dry days — rain washes fresh insecticide off the walls. MalarIA checks the live forecast first.</p></div>
+    <div class="factor"><div class="ico">🌧️</div><h3>Weather</h3><p>Walls must be dry for insecticide to bind — MalarIA checks the live forecast and names the spray-safe days.</p></div>
     <div class="factor"><div class="ico">🌊</div><h3>Ground &amp; flooding</h3><p>New standing water breeds mosquitoes within days — larviciding must land within ~48h of a flood.</p></div>
     <div class="factor"><div class="ico">📅</div><h3>Season</h3><p>An IRS campaign must finish before the transmission peak. A few weeks late misses the window entirely.</p></div>
     <div class="factor"><div class="ico">🧬</div><h3>Resistance</h3><p>Where pyrethroids fail, a standard net does little. The tool has to match the local vector.</p></div>
@@ -344,6 +343,18 @@ def render_landing(public_base_url: str = "", whatsapp_number: str = "+1 415 523
   <p class="sub" style="color:#e3d6c6;max-width:780px;margin-top:24px">It judges language by the words written —
     not the country — and uses correct local malaria terminology (in Chichewa: <i>malungo</i>, <i>udzudzu</i>,
     <i>tsambatsi</i>). The right advice means nothing if the worker can't read it.</p>
+</div></section>
+
+<!-- HOW IT'S BUILT -->
+<section id="howbuilt"><div class="wrap">
+  <div class="card" style="text-align:center;border-top:6px solid var(--teal);max-width:840px;margin:0 auto">
+    <div class="eyebrow">Under the hood</div>
+    <h2 style="margin-top:6px">How MalarIA is built</h2>
+    <p class="sub" style="margin:0 auto 20px">Eight live &amp; curated data sources, a <b>self-healing</b> layer
+      that stays honest when feeds go dark, and an <b>adversarial review</b> that challenges every recommendation
+      before it reaches a worker — built end-to-end with Claude Opus 4.8.</p>
+    <a class="btn btn-red" href="/tech">Read the technical write-up →</a>
+  </div>
 </div></section>
 
 <div class="pattern"></div>
