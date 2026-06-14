@@ -4,6 +4,7 @@ Each runs in a fresh context window (a fresh API call with its own system prompt
 per the three-agent architecture in the brief.
 """
 
+import os
 from typing import List, Optional
 
 import anthropic
@@ -18,10 +19,16 @@ _client: Optional[anthropic.Anthropic] = None
 def client() -> anthropic.Anthropic:
     global _client
     if _client is None:
+        # Strip the key: a trailing newline/space (easy to introduce when pasting
+        # into a host's env-var UI, e.g. Railway) makes an illegal HTTP header
+        # value and every API call fails with "Connection error" — strip defends
+        # against that regardless of how the key was entered.
+        api_key = os.getenv("ANTHROPIC_API_KEY", "").strip()
         # Fail fast on a stalled socket and retry on a fresh connection rather than
         # hang on the SDK's 600s default timeout. This connection drops sockets, so
         # a hung request would otherwise leave the worker "silent" for ~10 minutes.
         _client = anthropic.Anthropic(
+            api_key=api_key or None,
             timeout=config.REQUEST_TIMEOUT,
             max_retries=config.MAX_RETRIES,
         )
