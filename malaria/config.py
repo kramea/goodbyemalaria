@@ -63,6 +63,36 @@ SESSION_DIR = Path(os.getenv("MALARIA_SESSION_DIR", str(ROOT / "sessions")))
 KNOWLEDGE_FILE = ROOT / "knowledge" / "regions.json"
 MAPS_DIR = Path(os.getenv("MALARIA_MAPS_DIR", str(ROOT / "maps_out")))
 
+# --- Enriched-data / adversarial architecture ---
+# DEMO_MODE: stream every agent's reasoning step to the chat and run the full
+# adversarial loop even when a pre-reasoned decision exists (for presentation).
+# Off => production behaviour: skip adversarial when pre-reasoned, self-heal only
+# on fetch failure, stream only the final reply.
+DEMO_MODE = os.getenv("MALARIA_DEMO_MODE", "0") == "1"
+
+# Model for the auxiliary reasoning agents (self-healing, devil's advocate,
+# field realism, orchestrator). Sonnet by default — capable but fast.
+REVIEW_MODEL = os.getenv("MALARIA_REVIEW_MODEL", "claude-sonnet-4-6")
+
+# Live-data fetch budget (seconds) for the parallel fetcher pool. Anything slower
+# is treated as MISSING and handed to the self-healing layer (keeps turns fast).
+FETCH_TIMEOUT = float(os.getenv("MALARIA_FETCH_TIMEOUT", "6"))
+
+# Cache TTLs (seconds).
+RELIEFWEB_TTL = int(os.getenv("MALARIA_RELIEFWEB_TTL", str(6 * 3600)))      # 6h
+HISTORICAL_TTL = int(os.getenv("MALARIA_HISTORICAL_TTL", str(6 * 3600)))    # 6h
+DHIS2_TTL = int(os.getenv("MALARIA_DHIS2_TTL", str(6 * 3600)))             # 6h
+PMI_TTL = int(os.getenv("MALARIA_PMI_TTL", str(7 * 24 * 3600)))           # 7d
+
+# DHIS2 demo instance (replace play.dhis2.org with the national HMIS for prod).
+DHIS2_BASE = os.getenv("MALARIA_DHIS2_BASE", "https://play.dhis2.org/api")
+DHIS2_USER = os.getenv("MALARIA_DHIS2_USER", "admin")
+DHIS2_PASS = os.getenv("MALARIA_DHIS2_PASS", "district")
+
+# Pre-reasoned (offline-trained) decisions: validity window before re-training.
+PRE_REASONED_MAX_AGE_DAYS = int(os.getenv("MALARIA_PRE_REASONED_MAX_AGE_DAYS", "7"))
+PRE_REASONED_FILE = ROOT / "knowledge" / "regions_pretrained.json"
+
 # --- Maps on WhatsApp ---
 # Public base URL used to build absolute map-image / map-page links (Twilio fetches
 # these, and the web chat embeds them). e.g. https://<host>  (no trailing slash).

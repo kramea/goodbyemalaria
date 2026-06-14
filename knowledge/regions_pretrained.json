@@ -123,7 +123,19 @@
       },
       "dhis2_org_unit": "O6uvpzGd5pu",
       "llin_coverage_pct": 55,
-      "pre_reasoned": {}
+      "pre_reasoned": {
+        "outbreak": {
+          "pyrethroid_confirmed": {
+            "priority_intervention": "Two-track emergency response: (1) Deploy Bti larviciding within 48 hours on all flooded field edges, drainage channels, and pools; (2) Emergency IRS this week targeting 80%+ household coverage in Chókwè and Guijá clusters first",
+            "product": "Bti (biological larvicide) for larviciding; Actellic 300CS or SumiShield (clothianidin) for IRS",
+            "fallback_intervention": "If Actellic 300CS and SumiShield are both unavailable, do not substitute independently — call supervisor immediately to identify an approved non-pyrethroid fallback before mobilising teams",
+            "contraindications": "Do NOT use pyrethroids — resistance is confirmed in this zone. Do not spray on wet-wall days. IRS must not be conducted by unqualified community health workers — certified spray operators under supervisor oversight only required.",
+            "validated_at": "2026-06-14T04:30:47.636287+00:00",
+            "adversarial_passed": true,
+            "skeleton_reply": "Cases are up 45% and the Chókwè–Guijá zone is flooded — this is a two-track emergency. 🚨\n\n*Track 1 — Larviciding (start within 48 hours)*\nAll that new standing water is a breeding factory. Deploy Bti (biological larvicide) immediately — safe near irrigation water. Hit every flooded field edge, drainage channel, and pool you can access. This cuts the next mosquito generation before it bites.\n\n*Track 2 — Emergency IRS (this week)*\nYour Oct 2025 Actellic 300CS round is wearing off and ITN coverage has dropped to ~55% — too low. Do NOT use pyrethroids — resistance is confirmed here. Use Actellic 300CS or SumiShield (clothianidin). Target 80%+ household coverage — Chókwè and Guijá clusters first.\n\n🌧️ Spray only on dry-wall days — share your location and I can pull the rain forecast to pick the best spray window.\n\n➡️ Before starting, confirm with your district store that Actellic 300CS or SumiShield is in stock. If neither is available, call your supervisor immediately and do NOT substitute a pyrethroid product.\n\n⚠️ *Supply note:* Stockout risk is possible — confirm availability with your coordinator before mobilising teams. Identify your fallback product now.\n\n👷 *This step needs a trained supervisor:* IRS spraying must be done by a certified spray operator under supervisor oversight — not a standard community health worker.\n\nCan you share the specific village names or drainage channels you're targeting? I'll help you map the highest-risk spots and set a day-by-day schedule. 📍"
+          }
+        }
+      }
     },
     "maputo": {
       "names": [
