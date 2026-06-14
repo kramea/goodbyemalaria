@@ -159,7 +159,7 @@ def render_chat(public_base_url: str = "", whatsapp_number: str = "") -> str:
       +'<br><br>Olá! · Bonjour! · Moni!', true);
   }}
 
-  let busy=false, hintEl=null;
+  let busy=false, hintEl=null, inflight=null, turnSeq=0;
   function setBusy(b){{ busy=b; send.disabled=b; inp.disabled=b; }}
   function flashHint(){{
     if(hintEl) return;
@@ -168,24 +168,34 @@ def render_chat(public_base_url: str = "", whatsapp_number: str = "") -> str:
     inner.appendChild(hintEl); scroll();
     setTimeout(()=>{{ if(hintEl){{ hintEl.remove(); hintEl=null; }} }}, 1800);
   }}
+  // Cancel any in-flight turn and clear all transient state (used by "Start over").
+  function resetState(){{
+    turnSeq++;                                  // invalidate the running turn's result
+    if(inflight){{ try{{ inflight.abort(); }}catch(_){{}} inflight=null; }}
+    if(hintEl){{ hintEl.remove(); hintEl=null; }}
+    setBusy(false);
+  }}
 
   async function ask(text){{
     text=(text||'').trim();
     if(!text) return;
     if(busy){{ flashHint(); return; }}   // block + visibly tell the user we're still working
+    const myTurn=++turnSeq;              // tag this turn so a later "start over" can discard it
+    const myPhone=phone;                 // pin the conversation this turn belongs to
     setBusy(true); chips.style.display='none';
     bubble('me', fmt(text), true);
     inp.value=''; inp.style.height='auto';
     const typingRow=document.createElement('div'); typingRow.className='row them';
     typingRow.innerHTML='<div class="bub"><span class="typing"><i></i><i></i><i></i></span></div>';
     inner.appendChild(typingRow); scroll();
-    const ctrl=new AbortController();
+    const ctrl=new AbortController(); inflight=ctrl;
     const timer=setTimeout(()=>ctrl.abort(), 75000);   // never spin forever
     try{{
       const r=await fetch('/message',{{method:'POST',headers:{{'content-type':'application/json'}},
-        body:JSON.stringify({{phone:phone,message:text}}), signal:ctrl.signal}});
+        body:JSON.stringify({{phone:myPhone,message:text}}), signal:ctrl.signal}});
       let j=null, raw='';
       try{{ j=await r.json(); }}catch(_){{ try{{ raw=await r.text(); }}catch(_2){{}} }}
+      if(myTurn!==turnSeq) return;       // user started over while we waited → drop this result
       if(j && j.reply!=null){{
         let html=fmt(j.reply);
         if(j.map_url){{ html+='<img src="'+j.map_url+'" alt="alert map" loading="lazy"/>'; }}
@@ -197,13 +207,15 @@ def render_chat(public_base_url: str = "", whatsapp_number: str = "") -> str:
         sys('⚠️ Unexpected response ('+r.status+'). '+(raw?raw.slice(0,140):''));
       }}
     }}catch(e){{
-      sys(e.name==='AbortError' ? '⏱️ That took too long — please send it again.'
-                                : '⚠️ Network error — please try again. '+e);
+      if(myTurn===turnSeq){{           // ignore aborts caused by "start over"
+        sys(e.name==='AbortError' ? '⏱️ That took too long — please send it again.'
+                                  : '⚠️ Network error — please try again. '+e);
+      }}
     }}finally{{
       clearTimeout(timer);
-      typingRow.remove();      // ALWAYS clear the dots, success or failure
-      setBusy(false);
-      inp.focus(); scroll();
+      if(inflight===ctrl) inflight=null;
+      typingRow.remove();              // ALWAYS clear this turn's dots
+      if(myTurn===turnSeq){{ setBusy(false); inp.focus(); scroll(); }}  // only if still the active turn
     }}
   }}
 
@@ -212,6 +224,7 @@ def render_chat(public_base_url: str = "", whatsapp_number: str = "") -> str:
   inp.addEventListener('input',()=>{{ inp.style.height='auto'; inp.style.height=Math.min(inp.scrollHeight,120)+'px'; }});
   chips.querySelectorAll('.chip').forEach(c=>c.addEventListener('click',()=>ask(c.dataset.q)));
   document.getElementById('reset').addEventListener('click',()=>{{
+    resetState();                       // abort in-flight + unlock + clear dots BEFORE wiping the UI
     phone=newId(); localStorage.setItem('malaria_chat_id',phone);
     inner.innerHTML=''; chips.style.display='flex'; greet();
   }});
