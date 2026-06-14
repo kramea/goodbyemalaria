@@ -31,9 +31,17 @@ VERIFIER_MODEL = os.getenv("MALARIA_VERIFIER_MODEL", "claude-haiku-4-5")
 ESCALATION_MODEL = os.getenv("MALARIA_ESCALATION_MODEL", "claude-opus-4-8")
 
 # --- API client resilience ---
-# Per-request timeout (seconds): a healthy call is ~5-15s, so 40s catches a hung
-# socket without cutting off a slow-but-live response. The SDK default is 600s.
-REQUEST_TIMEOUT = float(os.getenv("MALARIA_REQUEST_TIMEOUT", "40"))
+# Per-request timeout (seconds). With streaming this is the gap BETWEEN chunks,
+# so a healthy call never approaches it; we keep it low so a STALE/half-open
+# connection (silently dropped after an idle gap) is caught fast and retried on a
+# fresh connection — instead of hanging ~40s. The SDK default is 600s.
+REQUEST_TIMEOUT = float(os.getenv("MALARIA_REQUEST_TIMEOUT", "20"))
+# Time to establish a new TCP/TLS connection before giving up (seconds).
+CONNECT_TIMEOUT = float(os.getenv("MALARIA_CONNECT_TIMEOUT", "8"))
+# Close idle pooled connections after this many seconds so we never REUSE one the
+# network has silently dropped (the root cause of the ~50s stalls). A fresh
+# connect costs ~0.2s, so recycling aggressively is cheap insurance.
+KEEPALIVE_EXPIRY = float(os.getenv("MALARIA_KEEPALIVE_EXPIRY", "15"))
 # Retries on timeout/connection errors (each on a fresh connection).
 MAX_RETRIES = int(os.getenv("MALARIA_MAX_RETRIES", "3"))
 

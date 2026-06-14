@@ -8,6 +8,7 @@ import os
 from typing import List, Optional
 
 import anthropic
+import httpx
 from pydantic import BaseModel, Field
 
 from . import config, prompts
@@ -24,15 +25,31 @@ def client() -> anthropic.Anthropic:
         # value and every API call fails with "Connection error" — strip defends
         # against that regardless of how the key was entered.
         api_key = os.getenv("ANTHROPIC_API_KEY", "").strip()
-        # Fail fast on a stalled socket and retry on a fresh connection rather than
-        # hang on the SDK's 600s default timeout. This connection drops sockets, so
-        # a hung request would otherwise leave the worker "silent" for ~10 minutes.
+        # Custom httpx client: recycle idle keep-alive connections quickly so we
+        # never reuse a half-open socket the network silently dropped (the cause of
+        # intermittent ~50s stalls), and use a short connect timeout. Combined with
+        # max_retries, a stalled call is caught fast and retried on a fresh socket.
+        http_client = httpx.Client(
+            timeout=httpx.Timeout(config.REQUEST_TIMEOUT, connect=config.CONNECT_TIMEOUT),
+            limits=httpx.Limits(max_keepalive_connections=10,
+                                keepalive_expiry=config.KEEPALIVE_EXPIRY),
+        )
         _client = anthropic.Anthropic(
             api_key=api_key or None,
-            timeout=config.REQUEST_TIMEOUT,
             max_retries=config.MAX_RETRIES,
+            http_client=http_client,
         )
     return _client
+
+
+def warm_connection() -> None:
+    """Open a connection to the API at boot so the first user message reuses a
+    warm socket instead of paying TLS setup (or hitting a cold stall). Cheap and
+    best-effort — never raises."""
+    try:
+        client().models.list(limit=1)
+    except Exception:
+        pass
 
 
 def _text(response) -> str:

@@ -71,10 +71,15 @@ def _prewarm() -> None:
         log.warning("Map pre-warm skipped", exc_info=True)
 
 
+def _warm() -> None:
+    agents.warm_connection()   # open an API socket so the first message is fast
+    _prewarm()                 # warm matplotlib's font cache
+
+
 @app.on_event("startup")
 def _on_startup() -> None:
     # Run in the background so the server starts accepting traffic immediately.
-    threading.Thread(target=_prewarm, daemon=True).start()
+    threading.Thread(target=_warm, daemon=True).start()
 
 # Instant holding reply, sent the moment a message arrives (in the worker's
 # detected language) while the specialist answer is prepared on a background
