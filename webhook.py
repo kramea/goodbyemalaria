@@ -50,23 +50,23 @@ app.mount("/assets", StaticFiles(directory=str(_ASSETS_DIR)), name="assets")
 
 
 def _prewarm() -> None:
-    """Build matplotlib's font cache + pre-render every region's choropleth at
-    boot, so the FIRST chat message doesn't pay the cold-start render cost.
+    """Warm matplotlib's font cache with ONE render at boot.
 
-    On a fresh container (e.g. Railway) the first matplotlib render otherwise
-    eats 5-10s building the font cache; doing it here moves that off the user's
-    first message. Best-effort — failures never block startup.
+    The expensive one-time cost on a fresh container (e.g. Railway) is matplotlib
+    building its font cache — that's what makes the first map render eat 5-10s.
+    A single render pays it off-band. We deliberately render only ONE region (not
+    all of them): on a small shared-CPU container, rendering every map at boot
+    would steal CPU from the user's first request. Remaining regions render
+    lazily on demand and are cached after first use. Best-effort.
     """
     try:
         for key in data.regions():
             rec = data.region_record(key)
             country = (rec or {}).get("country")
             if country:
-                try:
-                    choropleth.render_choropleth(country, key)  # cached after first
-                except Exception:
-                    log.debug("prewarm render failed for %s", key, exc_info=True)
-        log.info("Map pre-warm complete (%d regions cached).", len(data.regions()))
+                choropleth.render_choropleth(country, key)
+                log.info("Map pre-warm done (font cache warm via %s).", key)
+                return
     except Exception:
         log.warning("Map pre-warm skipped", exc_info=True)
 
