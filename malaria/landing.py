@@ -206,9 +206,6 @@ def render_landing(public_base_url: str = "", whatsapp_number: str = "+1 415 523
     <a href="#reality">The reality</a>
     <a href="#heroes">Field workers</a>
     <a href="#interventions">Interventions</a>
-    <a href="#timing">Timing</a>
-    <a href="#languages">Languages</a>
-    <a href="#beatable">Beatable</a>
     <a href="/tech">How it works</a>
     <a href="/chat">💬 Chat</a>
     <a href="#try">Try it</a>
@@ -255,94 +252,30 @@ def render_landing(public_base_url: str = "", whatsapp_number: str = "+1 415 523
 <section id="heroes" class="heroes"><div class="wrap">
   <div class="eyebrow" style="color:var(--amber)">The front line</div>
   <h2 style="color:#fff">The most important soldier against malaria<br/>is the field worker.</h2>
-  <p class="sub" style="color:#d8c8b8;max-width:780px">No lab, no policy, no app stops a single case on its own.
+  <p class="sub" style="color:#d8c8b8;max-width:none">No lab, no policy, no app stops a single case on its own.
     Prevention happens when a field worker reaches a village, reads the ground, and acts — spraying a wall,
     treating a pool of water, hanging a net — at exactly the moment it counts. They walk the last mile, in the
     heat and the rain, carrying the entire fight on their backs.</p>
   {gallery}
-  <p class="sub" style="color:#d8c8b8;max-width:780px;margin-top:26px">But the same action only counts if it lands at
+  <p class="sub" style="color:#d8c8b8;margin-top:26px;max-width:none">But the same action only counts if it lands at
     the right moment. <b style="color:#fff">MalarIA exists to make sure the field worker always knows that moment</b>
-    — which tool, where, and when.</p>
+    — which tool, where, and when — and answers in whatever language they write in, from Portuguese to Chichewa to
+    French, using the right local malaria terms. No menus, no English-only barrier.</p>
 </div></section>
 
 <!-- INTERVENTIONS -->
 <section id="interventions"><div class="wrap">
   <div class="eyebrow">The toolbox</div>
-  <h2>Many interventions — each with its moment</h2>
-  <p class="sub">Vector control isn't one tool, it's a sequence matched to the horizon. MalarIA routes every
-    field question to the right one.</p>
+  <h2>The right tool at the wrong time saves no one.</h2>
+  <p class="sub" style="max-width:none">Spray before the rains and it washes off; hand out nets after the peak and the cases already
+    happened. Vector control isn't one tool — it's a sequence matched to the moment, and MalarIA routes every
+    field question to the right one:</p>
   <div class="tl">
-    <div class="col">
-      <div class="when">⚡ Immediate · hours–days</div>
-      <h3>Stop transmission now</h3>
-      <ul>
-        <li><b>Larviciding (Bti)</b> — kill larvae in new standing water; resistance-proof</li>
-        <li><b>Emergency IRS</b> — rapid indoor spraying (Actellic, SumiShield)</li>
-        <li><b>Larval source management</b> — drain &amp; fill breeding sites</li>
-        <li><b>Spatial repellents</b> — a bridge while teams mobilise</li>
-      </ul>
-    </div>
-    <div class="col m">
-      <div class="when">📅 Month ahead · weeks</div>
-      <h3>Build the shield</h3>
-      <ul>
-        <li><b>ITN / LLIN nets</b> — dual-active (Interceptor G2) where resistance is confirmed</li>
-        <li><b>Eave tubes</b> — bypass pyrethroid resistance (50–70% fewer mosquitoes indoors)</li>
-        <li><b>Chemoprevention</b> — SMC for under-5s, IPTp in pregnancy</li>
-        <li><b>House screening</b> — close the entry points</li>
-      </ul>
-    </div>
-    <div class="col s">
-      <div class="when">🌧️ Season ahead · months</div>
-      <h3>Plan the campaign</h3>
-      <ul>
-        <li><b>Annual IRS</b> — finish before the wet-season peak</li>
-        <li><b>Resistance monitoring</b> — sets next year's insecticide</li>
-        <li><b>Vaccine (RTS,S / R21)</b> — through routine immunisation</li>
-        <li><b>Housing &amp; livestock measures</b> — durable, structural gains</li>
-      </ul>
-    </div>
-  </div>
-</div></section>
-
-<!-- PULL QUOTE: the core message -->
-<section class="pull"><div class="wrap">
-  <p class="q">The right tool at the wrong time saves no one.
-    <small>Spray before the rains and it washes off. Hand out nets after the peak and the cases already happened.
-      Timing is not a detail — it <i>is</i> the intervention.</small></p>
-</div></section>
-
-<!-- TIMING -->
-<section id="timing"><div class="wrap">
-  <div class="eyebrow">Why timing wins</div>
-  <h2>The same tool can save a village — or be wasted</h2>
-  <p class="sub">Whether a tool works depends on conditions that change week to week — exactly what MalarIA
-    checks live before it answers.</p>
-  <div class="factors">
-    <div class="factor"><div class="ico">🌧️</div><h3>Weather</h3><p>Walls must be dry for insecticide to bind — MalarIA checks the live forecast and names the spray-safe days.</p></div>
-    <div class="factor"><div class="ico">🌊</div><h3>Ground &amp; flooding</h3><p>New standing water breeds mosquitoes within days — larviciding must land within ~48h of a flood.</p></div>
-    <div class="factor"><div class="ico">📅</div><h3>Season</h3><p>An IRS campaign must finish before the transmission peak. A few weeks late misses the window entirely.</p></div>
-    <div class="factor"><div class="ico">🧬</div><h3>Resistance</h3><p>Where pyrethroids fail, a standard net does little. The tool has to match the local vector.</p></div>
+    <div class="col"><div class="when">⚡ Immediate · hours–days</div><h3>Stop transmission now</h3></div>
+    <div class="col m"><div class="when">📅 Month ahead · weeks</div><h3>Build the shield</h3></div>
+    <div class="col s"><div class="when">🌧️ Season ahead · months</div><h3>Plan the campaign</h3></div>
   </div>
   <div class="live"><span class="dot"></span> Live now: {counts['outbreak']} zone(s) in active outbreak · {counts['elevated']} elevated · {counts['normal']} in dry-season lull</div>
-</div></section>
-
-<!-- LANGUAGES -->
-<section id="languages" class="langs-sec"><div class="wrap">
-  <div class="eyebrow" style="color:var(--amber)">Speaks their language</div>
-  <h2 style="color:#fff">Every field worker, in their own words</h2>
-  <p class="sub" style="color:#e3d6c6;max-width:780px">Across Mozambique and Malawi, field workers speak many
-    languages. MalarIA <b style="color:#fff">auto-detects the language of the very first message</b> and replies
-    entirely in it — no menus, no English-only barrier — then stays in that language for the whole conversation.</p>
-  <div class="langs">
-    <div class="lang"><div class="ln">🇲🇿 Português</div><div class="ex">“Qual é a situação da malária em Beira?”</div></div>
-    <div class="lang"><div class="ln">🇲🇼 Chichewa</div><div class="ex">“Kodi udzudzu uli bwanji ku Zomba?”</div></div>
-    <div class="lang"><div class="ln">🌍 English</div><div class="ex">“How is the situation in Maputo?”</div></div>
-    <div class="lang"><div class="ln">🇫🇷 Français</div><div class="ex">“Quelle est la situation du paludisme ?”</div></div>
-  </div>
-  <p class="sub" style="color:#e3d6c6;max-width:780px;margin-top:24px">It judges language by the words written —
-    not the country — and uses correct local malaria terminology (in Chichewa: <i>malungo</i>, <i>udzudzu</i>,
-    <i>tsambatsi</i>). The right advice means nothing if the worker can't read it.</p>
 </div></section>
 
 <!-- HOW IT'S BUILT -->
@@ -358,35 +291,6 @@ def render_landing(public_base_url: str = "", whatsapp_number: str = "+1 415 523
 </div></section>
 
 <div class="pattern"></div>
-
-<!-- BEATABLE (moved to a hopeful close) -->
-<section id="beatable"><div class="wrap">
-  <div class="eyebrow">It's beatable — proven</div>
-  <h2>Eradicated there. We can end it here.</h2>
-  <div class="split">
-    <div>
-      <p class="sub">Over <b>40 countries and territories</b> have been certified malaria-free by the WHO —
-        proof that with sustained, well-timed action, malaria ends. The tools work. The science is settled.
-        What's left is execution on the ground, season after season — by field workers.</p>
-      <div class="free-list">
-        <span class="chip">China · 2021</span>
-        <span class="chip">El Salvador · 2021</span>
-        <span class="chip">Algeria · 2019</span>
-        <span class="chip">Argentina · 2019</span>
-        <span class="chip">Cabo Verde · 2024</span>
-        <span class="chip">Egypt · 2024</span>
-        <span class="chip">+ 35 more</span>
-      </div>
-    </div>
-    <div class="card dark">
-      <h3>So why does it still kill here?</h3>
-      <p>Because in high-burden zones the fight is relentless: heavy rains create new breeding sites in days,
-        mosquitoes grow resistant to insecticides, and a campaign that lands a few weeks late misses the peak.
-        <b>Elimination isn't a single act — it's the right intervention, in the right place, at the right time,
-        every time.</b> That's a problem of timing and reach. That's the problem MalarIA helps solve.</p>
-    </div>
-  </div>
-</div></section>
 
 <!-- CTA -->
 <section id="try"><div class="wrap">
