@@ -19,7 +19,9 @@ Endpoints:
 """
 
 import base64
+import json
 import logging
+import queue
 import threading
 import urllib.parse
 import urllib.request
@@ -27,7 +29,8 @@ from typing import Optional, Tuple
 from xml.sax.saxutils import escape
 
 from fastapi import FastAPI, Form, Query, Request, Response
-from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, PlainTextResponse
+from fastapi.responses import (FileResponse, HTMLResponse, JSONResponse,
+                               PlainTextResponse, StreamingResponse)
 from fastapi.staticfiles import StaticFiles
 from starlette.concurrency import run_in_threadpool
 
@@ -181,7 +184,8 @@ def tech_page():
 @app.get("/chat", response_class=HTMLResponse)
 def chat_page():
     """WhatsApp-style web chat — same agent as WhatsApp, via the /message endpoint."""
-    return HTMLResponse(chat.render_chat(public_base_url=config.PUBLIC_BASE_URL))
+    return HTMLResponse(chat.render_chat(public_base_url=config.PUBLIC_BASE_URL,
+                                         demo_mode=config.DEMO_MODE))
 
 
 @app.get("/coming-soon", response_class=HTMLResponse)
@@ -417,6 +421,49 @@ def message_json(payload: dict):
         "reply": reply,
         "map_url": media_url,
     }
+
+
+@app.post("/message/stream")
+def message_stream(payload: dict):
+    """Server-Sent Events: stream each pipeline stage (route → fetch → self-heal →
+    brief → specialist → adversarial → final) to the browser as it happens. Used by
+    the chat in DEMO_MODE to visibly narrate the multi-agent reasoning."""
+    phone = payload.get("phone", "web:stream")
+    message = (payload.get("message") or "").strip()
+    if not message:
+        return JSONResponse({"error": "missing 'message'"}, status_code=400)
+
+    q: "queue.Queue" = queue.Queue()
+
+    def on_step(stage: str, data: dict) -> None:
+        q.put({"type": "step", "stage": stage, "data": data})
+
+    def run() -> None:
+        try:
+            result = handle_message(phone, message, on_step=on_step)
+            media = None
+            if result.show_map and result.region_key:
+                media = _media_url_for(result.region_key, None)
+            q.put({"type": "final", "reply": result.text, "map_url": media,
+                   "region": result.region_key, "urgency": result.urgency,
+                   "used_pre_reasoned": result.used_pre_reasoned})
+        except Exception as e:  # pragma: no cover
+            log.exception("stream pipeline failed")
+            q.put({"type": "error", "error": f"{type(e).__name__}: {e}"})
+        finally:
+            q.put({"type": "done"})
+
+    threading.Thread(target=run, daemon=True).start()
+
+    def gen():
+        while True:
+            ev = q.get()
+            yield f"data: {json.dumps(ev)}\n\n"
+            if ev.get("type") == "done":
+                break
+
+    return StreamingResponse(gen(), media_type="text/event-stream",
+                             headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
 
 
 @app.get("/app", response_class=HTMLResponse)

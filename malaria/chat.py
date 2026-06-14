@@ -11,7 +11,8 @@ turns and reloads; "Start over" clears it for a fresh greeting.
 """
 
 
-def render_chat(public_base_url: str = "", whatsapp_number: str = "") -> str:
+def render_chat(public_base_url: str = "", whatsapp_number: str = "", demo_mode: bool = False) -> str:
+    demo_js = "true" if demo_mode else "false"
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -74,6 +75,16 @@ def render_chat(public_base_url: str = "", whatsapp_number: str = "") -> str:
   .typing i:nth-child(2){{animation-delay:.2s}} .typing i:nth-child(3){{animation-delay:.4s}}
   @keyframes bl{{0%,60%,100%{{opacity:.3;transform:translateY(0)}}30%{{opacity:1;transform:translateY(-3px)}}}}
 
+  /* DEMO_MODE multi-agent trace card */
+  .trace{{background:#fffdf8;border:1px solid var(--line);border-radius:12px;padding:10px 12px;max-width:90%;font-size:13px}}
+  .trace .hd{{font-family:Montserrat;font-weight:800;color:var(--teal-d);font-size:11px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px}}
+  .step-line{{display:flex;gap:8px;align-items:baseline;padding:4px 0;border-top:1px dashed #efe7d8;animation:fade .25s ease}}
+  .step-line:first-of-type{{border-top:0}}
+  .step-line .ic{{flex:0 0 auto}}
+  .step-line .lbl{{font-weight:700;color:var(--ink)}}
+  .step-line .dt{{color:var(--muted)}}
+  @keyframes fade{{from{{opacity:0;transform:translateY(3px)}}to{{opacity:1;transform:none}}}}
+
   /* suggestion chips */
   .chips{{max-width:680px;margin:0 auto;padding:8px 14px 0;display:flex;gap:8px;flex-wrap:wrap;flex:0 0 auto;background:var(--wa-bg)}}
   .chip{{background:#fff;border:1px solid var(--line);color:var(--teal-d);border-radius:999px;
@@ -126,6 +137,7 @@ def render_chat(public_base_url: str = "", whatsapp_number: str = "") -> str:
   const feed=document.getElementById('feed'), inner=document.getElementById('inner');
   const inp=document.getElementById('inp'), send=document.getElementById('send');
   const chips=document.getElementById('chips');
+  const DEMO={demo_js};   // when true, stream the multi-agent pipeline steps
 
   // Stable per-browser id so the agent keeps conversation memory across turns/reloads.
   function newId(){{ return 'web:'+Math.random().toString(36).slice(2)+Date.now().toString(36); }}
@@ -219,10 +231,72 @@ def render_chat(public_base_url: str = "", whatsapp_number: str = "") -> str:
     }}
   }}
 
-  send.addEventListener('click',()=>ask(inp.value));
-  inp.addEventListener('keydown',e=>{{ if(e.key==='Enter' && !e.shiftKey){{ e.preventDefault(); ask(inp.value); }} }});
+  // ---- DEMO_MODE: stream the multi-agent pipeline, narrating each stage ----
+  function stepLine(card, ic, lbl, dt){{
+    const l=document.createElement('div'); l.className='step-line';
+    l.innerHTML='<span class="ic">'+ic+'</span><span class="lbl">'+esc(lbl)+'</span> <span class="dt">'+esc(dt||'')+'</span>';
+    card.appendChild(l); scroll();
+  }}
+  function handleEv(ev, card){{
+    if(ev.type==='step'){{
+      const d=ev.data||{{}};
+      if(ev.stage==='route') stepLine(card,'🧭','Language & routing',(d.language||'')+' · '+(d.intent||'')+' · '+(d.intervention||''));
+      else if(ev.stage==='fetch'){{ const s=d.sources||{{}}; const ok=Object.keys(s).filter(k=>s[k]); const bad=Object.keys(s).filter(k=>!s[k]);
+        stepLine(card,'🔍','Live data',ok.length+' live'+(bad.length?' · '+bad.join(', ')+' down → fallback':'')+' ('+d.seconds+'s)'); }}
+      else if(ev.stage==='self_heal') stepLine(card,'🛡️','Self-healing',d.has_issues?('recovered — '+((d.fallbacks||[]).length)+' fallback(s) applied'):'all sources healthy');
+      else if(ev.stage==='brief') stepLine(card,'📋','Situation brief','urgency: '+d.urgency+' · '+(d.use_pre_reasoned?'pre-validated decision loaded':'reasoning live'));
+      else if(ev.stage==='specialist') stepLine(card,'✍️','Specialist draft',(d.seconds||'?')+'s');
+      else if(ev.stage==='adversarial'){{ const dev=d.devil||{{}}; const rea=d.realism||{{}};
+        stepLine(card,'⚔️','Adversarial review','devil: '+(dev.challenge_severity||'n/a')+' · realism: '+(rea.feasibility||'n/a')+(d.changed?' → reply revised':' → approved')); }}
+    }} else if(ev.type==='final'){{
+      let html=fmt(ev.reply||'');
+      if(ev.map_url){{ html+='<img src="'+ev.map_url+'" alt="alert map" loading="lazy"/>'; }}
+      const b=bubble('them', html, true);
+      const img=b.querySelector('img'); if(img){{ img.onload=scroll; img.onerror=scroll; }}
+    }} else if(ev.type==='error'){{ sys('⚠️ '+ev.error); }}
+  }}
+  async function askStream(text){{
+    text=(text||'').trim();
+    if(!text) return;
+    if(busy){{ flashHint(); return; }}
+    const myTurn=++turnSeq, myPhone=phone;
+    setBusy(true); chips.style.display='none';
+    bubble('me', fmt(text), true);
+    inp.value=''; inp.style.height='auto';
+    const row=document.createElement('div'); row.className='row them';
+    const card=document.createElement('div'); card.className='bub trace';
+    card.innerHTML='<div class="hd">🧠 Multi-agent pipeline</div>';
+    row.appendChild(card); inner.appendChild(row); scroll();
+    const ctrl=new AbortController(); inflight=ctrl;
+    const timer=setTimeout(()=>ctrl.abort(), 120000);
+    try{{
+      const r=await fetch('/message/stream',{{method:'POST',headers:{{'content-type':'application/json'}},
+        body:JSON.stringify({{phone:myPhone,message:text}}), signal:ctrl.signal}});
+      const reader=r.body.getReader(); const dec=new TextDecoder(); let buf='';
+      while(true){{
+        const {{value,done}}=await reader.read(); if(done) break;
+        buf+=dec.decode(value,{{stream:true}});
+        let i; while((i=buf.indexOf('\\n\\n'))>=0){{
+          const chunk=buf.slice(0,i); buf=buf.slice(i+2);
+          if(!chunk.startsWith('data: ')) continue;
+          let ev; try{{ ev=JSON.parse(chunk.slice(6)); }}catch(_){{ continue; }}
+          if(myTurn!==turnSeq) continue;
+          handleEv(ev, card);
+        }}
+      }}
+    }}catch(e){{
+      if(myTurn===turnSeq) stepLine(card,'⚠️','Error', e.name==='AbortError'?'timed out':String(e));
+    }}finally{{
+      clearTimeout(timer); if(inflight===ctrl) inflight=null;
+      if(myTurn===turnSeq){{ setBusy(false); inp.focus(); scroll(); }}
+    }}
+  }}
+
+  const dispatch = (t) => DEMO ? askStream(t) : ask(t);
+  send.addEventListener('click',()=>dispatch(inp.value));
+  inp.addEventListener('keydown',e=>{{ if(e.key==='Enter' && !e.shiftKey){{ e.preventDefault(); dispatch(inp.value); }} }});
   inp.addEventListener('input',()=>{{ inp.style.height='auto'; inp.style.height=Math.min(inp.scrollHeight,120)+'px'; }});
-  chips.querySelectorAll('.chip').forEach(c=>c.addEventListener('click',()=>ask(c.dataset.q)));
+  chips.querySelectorAll('.chip').forEach(c=>c.addEventListener('click',()=>dispatch(c.dataset.q)));
   document.getElementById('reset').addEventListener('click',()=>{{
     resetState();                       // abort in-flight + unlock + clear dots BEFORE wiping the UI
     phone=newId(); localStorage.setItem('malaria_chat_id',phone);
