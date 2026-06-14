@@ -202,8 +202,10 @@ Return these fields:
   broad ask, or "general" for a pure greeting / off-topic / clarification.
 - needs_weather: true whenever a good answer needs the short-range rain forecast —
   spray/larvicide timing, "will it rain", "can I work/spray tomorrow", "when is the
-  right time to go / spray / work in X", "when should I…", or current flooding.
-  Otherwise false.
+  right time to go / spray / work in X", "when should I…". Otherwise false.
+- needs_flood: true when the worker asks about CURRENT flooding, river levels, or new
+  standing water for an area RIGHT NOW ("is it flooding in X?", "are the rivers high?",
+  "has the water risen?"). This pulls a live river-discharge signal. Otherwise false.
 - rationale: <= 12 words.
 
 INTERVENTION MENU:
@@ -219,10 +221,12 @@ offer them as follow-through ("Once that's moving I'll cover the follow-up — s
 good?"). Convey urgency without alarm, and keep it short."""
 
 COUNTRY_DIRECTIVE = """\
-COUNTRY-LEVEL question (no single district named). Give a national overview for this
-country using the zones in the data — name the high-burden districts you DO know
-(don't claim nationwide detail you lack) — then invite the worker to name their
-district or area so you can get specific. Do not default to the other country."""
+COUNTRY-LEVEL question (no single district named). The brief lists the per-district
+curated status for every zone we track in this country — USE it. When asked to rank or
+compare districts by current burden, do exactly that from those alert levels / headlines
+and name the districts; do NOT say you "have no data" when these statuses are right there.
+Be honest that this covers the districts we track (not literally every district nationwide),
+and invite the worker to name their area for specifics. Do not default to the other country."""
 
 FLOOD_DIRECTIVE = """\
 🌊 ACTIVE FLOODING in this area (see CURRENT STATUS + the LIVE FLOOD SIGNAL). Don't dump

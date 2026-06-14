@@ -300,7 +300,7 @@ def render_chat(public_base_url: str = "", whatsapp_number: str = "", demo_mode:
     setBusy(true); chips.style.display='none';
     bubble('me', fmt(text), true);
     inp.value=''; inp.style.height='auto';
-    const typingRow=document.createElement('div'); typingRow.className='row them';
+    let typingRow=document.createElement('div'); typingRow.className='row them';
     typingRow.innerHTML='<div class="bub"><span class="typing"><i></i><i></i><i></i></span></div>';
     inner.appendChild(typingRow); scroll();
     const ctrl=new AbortController(); inflight=ctrl;
@@ -320,7 +320,15 @@ def render_chat(public_base_url: str = "", whatsapp_number: str = "", demo_mode:
           if(!chunk.startsWith('data: ')) continue;
           let ev; try{{ ev=JSON.parse(chunk.slice(6)); }}catch(_){{ continue; }}
           if(myTurn!==turnSeq) continue;
-          if(ev.type==='token'){{ ensureBubble(); acc+=ev.text||''; txtEl.innerHTML=fmt(acc); scroll(); }}
+          if(ev.type==='notice'){{
+            if(txtEl) continue;                        // answer already started — ignore late notice
+            if(typingRow.parentNode) typingRow.remove();
+            bubble('them', fmt(ev.text), true);        // "pulling live data…" as its own bubble
+            typingRow=document.createElement('div'); typingRow.className='row them';
+            typingRow.innerHTML='<div class="bub"><span class="typing"><i></i><i></i><i></i></span></div>';
+            inner.appendChild(typingRow); scroll();
+          }}
+          else if(ev.type==='token'){{ ensureBubble(); acc+=ev.text||''; txtEl.innerHTML=fmt(acc); scroll(); }}
           else if(ev.type==='final'){{ ensureBubble(); acc=ev.reply||acc; txtEl.innerHTML=fmt(acc); scroll(); }}
           else if(ev.type==='error'){{ if(typingRow.parentNode) typingRow.remove(); sys('⚠️ '+ev.error); }}
         }}

@@ -264,13 +264,17 @@ def _media_url_for(region_key: str, pin: Optional[Tuple[float, float]]) -> Optio
 def build_reply(phone: str, message: str, pin: Optional[Tuple[float, float]] = None,
                 pin_region: Optional[str] = None,
                 precomputed_route: "Optional[agents.Route]" = None,
+                on_notice: "Optional[callable]" = None,
                 ) -> Tuple[str, Optional[str], Optional[str]]:
     """One specialist turn for this worker + attach the area's map.
+
+    on_notice (optional) is called with a short "pulling live data…" line when the
+    turn goes to fetch a live signal — used to push a holding WhatsApp message.
 
     Returns (reply_text, media_url_or_None, region_key_or_None).
     """
     result = handle_message(phone, message, pin=pin, pin_region=pin_region,
-                            precomputed_route=precomputed_route)
+                            precomputed_route=precomputed_route, on_notice=on_notice)
     reply = result.text
     region_key = result.region_key
 
@@ -292,10 +296,20 @@ def build_reply(phone: str, message: str, pin: Optional[Tuple[float, float]] = N
 
 def _process_and_push(phone: str, message: str, pin: Optional[Tuple[float, float]],
                       pin_region: Optional[str], route: "Optional[agents.Route]") -> None:
-    """Background: specialist answer (+ map) pushed back via Twilio REST."""
+    """Background: specialist answer (+ map) pushed back via Twilio REST.
+
+    If the turn needs a live data pull, a holding "pulling live data…" message is
+    sent to the worker first (separate WhatsApp message), then the answer follows.
+    """
+    def _push_notice(text: str) -> None:
+        try:
+            send_whatsapp(to=phone, body=text)
+        except Exception:  # pragma: no cover — holding message is best-effort
+            log.info("Holding notice send failed for %s", phone)
+
     try:
         reply, media_url, _ = build_reply(phone, message, pin=pin, pin_region=pin_region,
-                                          precomputed_route=route)
+                                          precomputed_route=route, on_notice=_push_notice)
     except Exception:  # pragma: no cover
         log.exception("Specialist error")
         reply, media_url = (
@@ -443,13 +457,18 @@ def message_stream(payload: dict):
     def on_token(text: str) -> None:
         q.put({"type": "token", "text": text})
 
+    def on_notice(text: str) -> None:
+        q.put({"type": "notice", "text": text})
+
     def run() -> None:
         try:
             # Stream the specialist's words to the browser as they generate (first
             # token in ~0.6s). DEMO_MODE narrates pipeline stages instead, so we
             # pass no token callback there (service also guards this).
             token_cb = None if config.DEMO_MODE else on_token
-            result = handle_message(phone, message, on_step=on_step, on_token=token_cb)
+            notice_cb = None if config.DEMO_MODE else on_notice
+            result = handle_message(phone, message, on_step=on_step, on_token=token_cb,
+                                    on_notice=notice_cb)
             media = None
             if result.show_map and result.region_key:
                 media = _media_url_for(result.region_key, None)

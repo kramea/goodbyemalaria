@@ -27,6 +27,22 @@ from . import (adversarial, agents, config, data, dhis2, flood,
 log = logging.getLogger("malaria.service")
 
 
+# Conversational holding line shown when we go fetch a LIVE signal the worker's
+# question needs but we don't pull by default (live rain forecast, current flood
+# levels). Sent in the worker's language before the fetch, then the answer follows.
+_LIVE_NOTICE = {
+    "English":    "⏳ Let me pull the latest live data for {area} — one moment…",
+    "Portuguese": "⏳ Vou buscar os dados ao vivo mais recentes para {area} — um momento…",
+    "French":     "⏳ Je récupère les dernières données en direct pour {area} — un instant…",
+    "Chichewa":   "⏳ Ndikutenga deta yaposachedwa ya {area} — dikirani pang'ono…",
+}
+
+
+def _live_notice(language: str, area: str) -> str:
+    tpl = _LIVE_NOTICE.get(language, _LIVE_NOTICE["English"])
+    return tpl.format(area=area)
+
+
 _CLOSING_HINTS = (
     "thank", "thanks", "that's all", "thats all", "that is all", "all set",
     "we're good", "were good", "no more", "appreciate", "bye", "goodbye", "cheers",
@@ -145,8 +161,27 @@ def build_enriched_context(region_key, country, rec, results, heal_warning="") -
               f"Known resistance: {rec.get('resistance_profile','—')}",
               f"Last intervention: {rec.get('last_intervention','—')}",
               f"LLIN coverage  : {rec.get('llin_coverage_pct','—')}%"]
+    elif country:
+        # No single district named — give the per-district curated status for every
+        # zone we track in this country so the specialist CAN compare/rank districts
+        # by current burden (instead of saying it has no data). Local KB, ~0 latency.
+        rows = []
+        for rkey, rr in data.regions().items():
+            if rr.get("country") != country:
+                continue
+            rcs = rr.get("current_status") or {}
+            rows.append(
+                f"• {rkey.replace('_', ' ').title()}: [{rcs.get('alert_level', 'unknown')}] "
+                f"{rcs.get('headline', '—')} (trend: {rcs.get('trend', '—')}; "
+                f"season: {rr.get('season', '—')}; resistance: {rr.get('resistance_profile', '—')})")
+        if rows:
+            L += [f"National view — {country}. These are the districts we track; rank/compare "
+                  f"them by the status below to answer burden questions, and name them:"]
+            L += rows
+        else:
+            L += [f"(National view — no district data for {country}.)"]
     else:
-        L += [f"(National view — no single district named. Country: {country or 'unknown'}.)"]
+        L += ["(National view — no single district named.)"]
     L += [""]
 
     # ReliefWeb
@@ -192,6 +227,12 @@ def build_enriched_context(region_key, country, rec, results, heal_warning="") -
     if spray:
         L += [f"Spray-safe days: {', '.join(spray)}"]
     L += ["[Source: Open-Meteo Forecast API]", ""]
+
+    # Live flood signal (river discharge) — only present when fetched this turn.
+    fl = results.get("flood_signal") or {}
+    if fl.get("ok") and fl.get("summary"):
+        L += ["── LIVE FLOOD SIGNAL (river discharge, fetched now) ──",
+              fl["summary"], "[Source: GloFAS / Open-Meteo Flood API]", ""]
 
     # PMI (fallback: KB resistance)
     pm = results.get("pmi") or {}
@@ -295,6 +336,7 @@ def handle_message(
     precomputed_route: "Optional[agents.Route]" = None,
     on_step: Optional[Callable[[str, dict], None]] = None,
     on_token: Optional[Callable[[str], None]] = None,
+    on_notice: Optional[Callable[[str], None]] = None,
 ) -> Reply:
     step = on_step or _noop
     session = memory.load(phone)
@@ -346,7 +388,23 @@ def handle_message(
         r = f_route.result()
         results = f_fetch.result()
 
-    if r.needs_weather and coords:
+    language = session.get("language") or r.language
+    session["language"] = language
+
+    # ON-DEMAND LIVE PULLS — signals we skip by default. If the question needs the
+    # live rain forecast or a current flood reading, tell the worker we're pulling
+    # live data (in their language), THEN fetch it. (A KB-flagged active flood is
+    # fetched silently as before — the worker didn't ask for it.)
+    want_weather = bool(r.needs_weather and coords)
+    want_flood_live = bool(r.needs_flood and coords)
+    if (want_weather or want_flood_live) and on_notice:
+        area_label = (region_key or country or "your area").replace("_", " ").title()
+        try:
+            on_notice(_live_notice(language, area_label))
+        except Exception:  # pragma: no cover — narration must never block the answer
+            log.exception("on_notice failed")
+
+    if want_weather:
         # Hard-cap the slow forecast so it can't blow the turn; KB seasonality is
         # the fallback. Detached shutdown so a slow socket never blocks us.
         wex = ThreadPoolExecutor(max_workers=1)
@@ -360,15 +418,20 @@ def handle_message(
                                   "error": "forecast slow/unavailable"}
         wex.shutdown(wait=False, cancel_futures=True)
 
-    if flooding and coords:  # extra flood discharge signal when actively flooding
-        fs = flood.discharge_summary(*coords)
-        if fs:
-            results.setdefault("historical", {})
-            results["flood_signal"] = {"ok": True, "summary": fs, "data": {}}
+    if (want_flood_live or flooding) and coords:  # live river-discharge signal
+        # Hard-cap like the forecast: flood makes two upstream calls, so bound the
+        # whole operation rather than each request. Detached so it never blocks.
+        fex = ThreadPoolExecutor(max_workers=1)
+        ffut = fex.submit(flood.discharge_summary, *coords)
+        try:
+            fs = ffut.result(timeout=config.FETCH_TIMEOUT)
+            if fs:
+                results["flood_signal"] = {"ok": True, "summary": fs, "data": {}}
+        except Exception:
+            pass
+        fex.shutdown(wait=False, cancel_futures=True)
     _t_fetch = time.perf_counter() - _tf
 
-    language = session.get("language") or r.language
-    session["language"] = language
     is_triage = (r.intent == "triage" or r.intervention == "triage")
     step("route", {"language": language, "intent": r.intent, "intervention": r.intervention,
                    "needs_weather": r.needs_weather})

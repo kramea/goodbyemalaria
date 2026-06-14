@@ -160,6 +160,8 @@ class Route(BaseModel):
     timeline: str = Field(description="immediate, month, season, or mixed")
     intervention: str = Field(description="an intervention key, or 'triage'/'general'")
     needs_weather: bool = Field(description="true if the rain forecast is needed")
+    needs_flood: bool = Field(default=False, description="true if the question asks about "
+                              "CURRENT flooding / river levels / standing water for an area")
     rationale: str = Field(description="<=12 words")
 
 
@@ -183,7 +185,8 @@ def route(message: str, session_context: str = "") -> Route:
         pass
     # Fallback: safe default (triage, no weather, English) so the turn still works.
     return Route(language="English", intent="triage", timeline="mixed",
-                 intervention="triage", needs_weather=False, rationale="fallback")
+                 intervention="triage", needs_weather=False, needs_flood=False,
+                 rationale="fallback")
 
 
 def _normalize_route(r: Route) -> Route:
