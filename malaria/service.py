@@ -276,6 +276,8 @@ def build_enriched_context(region_key, country, rec, results, heal_warning="") -
             L += [f"Nets : {ir['net_choice']}"]
         if ir.get("irs_choice"):
             L += [f"IRS  : {ir['irs_choice']}"]
+        if ir.get("irs_rotation"):
+            L += [f"IRS rotation: {ir['irs_rotation']}"]
         if steph.get("status_mozambique_malawi"):
             L += [f"An. stephensi: {steph['status_mozambique_malawi']}"]
         L += ["[Source: WHO World Malaria Report 2025]", ""]

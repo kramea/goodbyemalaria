@@ -8,7 +8,8 @@
       "CHIRPS daily rainfall (UCSB Climate Hazards Center)",
       "SRTM / Copernicus GLO-30 DEM + HAND (low-lying / flood-prone zones)",
       "PMI/Goodbye Malaria IRS + ITN campaign records",
-      "WHO Global database on insecticide resistance"
+      "WHO Global database on insecticide resistance",
+      "WHO Global Plan for Insecticide Resistance Management in malaria vectors (GPIRM) — IRS insecticide rotation strategy (annual, pre-emptive)"
     ],
     "as_of": "2026-06-15",
     "season_note": "Southern Africa transmission is rainfall-driven. Core wet season is roughly Nov-Apr; June is normally dry-season trough. Early/anomalous rains shift risk forward. 2025-2026 saw an anomalous early-rain surge in parts of southern Mozambique.",
@@ -56,7 +57,9 @@
         "chlorfenapyr": "No confirmed resistance to date — remains effective against pyrethroid-resistant vectors.",
         "net_choice": "Where pyrethroid resistance is confirmed (the default here), use a DUAL-ACTIVE net — pyrethroid-chlorfenapyr (e.g. Interceptor G2) or pyrethroid-pyriproxyfen — or a PBO net; NOT pyrethroid-only. Dual-active nets rose from 8% (2022) to 47% (2024) of nets delivered.",
         "irs_choice": "Use a non-pyrethroid class (organophosphate/neonicotinoid, e.g. Actellic 300CS or SumiShield/clothianidin) and rotate classes; do not co-deploy pyrethroid IRS with pyrethroid nets.",
-        "source": "WHO World Malaria Report 2025 (pp. 108–110, 190)"
+        "source": "WHO World Malaria Report 2025 (pp. 108–110, 190)",
+        "irs_rotation": "Rotate the IRS insecticide by MODE-OF-ACTION class, ideally on an ANNUAL cycle, PRE-EMPTIVELY — even before resistance is detected (WHO GPIRM best practice). Do not rely on one class indefinitely: if the same class has been used (e.g. SumiShield / clothianidin, a neonicotinoid), switch to a different class the next round (e.g. Actellic 300CS / pirimiphos-methyl, an organophosphate), then rotate back. If resistance to the insecticide in use is CONFIRMED, switch away as quickly as practicable — promptly removing the selection pressure can slow or even partially reverse resistance. Annual rotation is the ideal; resource-limited programmes in practice rotate roughly every 1–3 years.",
+        "irs_rotation_source": "WHO Global Plan for Insecticide Resistance Management (GPIRM), pp. 80–81, Table 4 — IRS rotation recommendations"
       },
       "vector_behavior": "ITNs and IRS work best where the dominant vector bites at night and rests INDOORS; outdoor / early-evening biting drives residual transmission that nets and IRS alone cannot close. Match the tool to local vector behaviour and resistance.",
       "source": "WHO Subnational tailoring of malaria interventions reference manual (2025), pp. 34–35, 99, 106, 136–138"
