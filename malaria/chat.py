@@ -122,6 +122,13 @@ def render_chat(public_base_url: str = "", whatsapp_number: str = "", demo_mode:
 <div class="chips" id="chips">
   <button class="chip" data-q="How is the malaria situation in Maputo?">How is it in Maputo?</button>
   <button class="chip" data-q="I want to spray tomorrow in Gaza — will it rain there?">Spray tomorrow — will it rain?</button>
+  <button class="chip" data-q="There is a lot of standing water near our village after the rains. What should we do now?">Standing water after rains — what now?</button>
+  <button class="chip" data-q="We sprayed SumiShield two years running in Gaza. Should we use it again this year, or rotate?">Reuse the same IRS again?</button>
+  <button class="chip" data-q="What kind of bed nets should we distribute where pyrethroid resistance is confirmed?">Which bed nets to distribute?</button>
+  <button class="chip" data-q="Is it flooding in Sofala right now? Are the rivers high?">Is it flooding in Sofala now?</button>
+  <button class="chip" data-q="Which districts in Malawi have the highest malaria burden right now?">Worst districts in Malawi?</button>
+  <button class="chip" data-q="When should we start the IRS campaign before the wet season?">When to start IRS spraying?</button>
+  <button class="chip" data-q="We have a malaria outbreak in our district. What do we do first?">Outbreak — what first?</button>
   <button class="chip" data-q="Qual é a situação da malária na Beira?">🇲🇿 Situação na Beira?</button>
   <button class="chip" data-q="Kodi udzudzu uli bwanji ku Zomba?">🇲🇼 Udzudzu ku Zomba?</button>
 </div>
