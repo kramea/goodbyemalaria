@@ -2,16 +2,74 @@
   "_meta": {
     "description": "Curated sub-national malaria decision-support dataset for Goodbye Malaria field operations in Mozambique and Malawi. Values are synthesized from open sources for hackathon/demo use and should be re-validated against live feeds before operational use. Geo/elevation fields are approximate, curated for thematic mapping and nearest-region matching.",
     "sources": [
-      "WHO World Malaria Report 2025 (district incidence bands)",
+      "WHO World Malaria Report 2025 (national burden, trends, interventions, vaccine, insecticide resistance, An. stephensi surveillance)",
+      "WHO Subnational tailoring of malaria strategies and interventions: reference manual (2025) — stratification & intervention-targeting methodology; Magude (Mozambique) elimination case study",
       "Malaria Atlas Project (MAP) sub-national PfPR estimates",
       "CHIRPS daily rainfall (UCSB Climate Hazards Center)",
       "SRTM / Copernicus GLO-30 DEM + HAND (low-lying / flood-prone zones)",
       "PMI/Goodbye Malaria IRS + ITN campaign records",
       "WHO Global database on insecticide resistance"
     ],
-    "as_of": "2026-06-13",
+    "as_of": "2026-06-15",
     "season_note": "Southern Africa transmission is rainfall-driven. Core wet season is roughly Nov-Apr; June is normally dry-season trough. Early/anomalous rains shift risk forward. 2025-2026 saw an anomalous early-rain surge in parts of southern Mozambique.",
-    "elevation_note": "Low-lying, flat ground near rivers/lakes pools water after rain and becomes larval habitat within days. Elevation + flood-proneness are first-order signals for where to target larviciding and larval source management."
+    "elevation_note": "Low-lying, flat ground near rivers/lakes pools water after rain and becomes larval habitat within days. Elevation + flood-proneness are first-order signals for where to target larviciding and larval source management.",
+    "country_profiles": {
+      "Mozambique": {
+        "year": 2024,
+        "estimated_cases": "~10.2 million — 4th highest globally (3.6% of global cases, 2.9% of global deaths; 3.9% of WHO African Region cases).",
+        "incidence_trend_2015_2024": "Modest decline (5–25% decrease); NOT on track for the 2025 GTS targets.",
+        "vector_control": "IRS protection fell sharply — ~5.5 million FEWER people protected 2023→2024 (the largest single-country IRS drawdown globally that year). ITN population access ~45%, slept-under ~39% (2022/23 DHS). No standard ITN mass campaign in 2024.",
+        "chemoprevention": "SMC cut ~67% in 2024 (post-election commodity disruption), planned to resume 2025; PMC in 14 districts; IPTp implemented but below 50% IPTp3 coverage.",
+        "vaccine": "Malaria vaccine (RTS,S/R21) introduced as of 2024, in districts running PMC.",
+        "diagnostics_threat": "pfhrp2/3 gene deletions detected in Inhambane province (2023) — can cause false-negative HRP2 RDTs.",
+        "vectors_resistance": "Confirmed resistance to ≥1 insecticide class. An. stephensi NOT detected (2 sites, 2024).",
+        "first_line_treatment": "Artemether-lumefantrine (AL); SP for IPTp.",
+        "climate": "Cyclones and floods have repeatedly damaged health facilities and disrupted ITN/IRS campaigns.",
+        "source": "WHO World Malaria Report 2025"
+      },
+      "Malawi": {
+        "year": 2024,
+        "estimated_cases": "~6.4 million (1.2% of global cases, 2.3% of global deaths — death share ~2× case share, signalling relatively high case-fatality).",
+        "incidence_trend_2015_2024": "INCREASING (5–25% increase) — off-track and worsening vs the 2025 GTS targets.",
+        "vector_control": "Nationwide ITN mass campaign in 2024 (~11.8 million nets, ~100% of plan; ~3-year campaign cycle).",
+        "chemoprevention": "No SMC/PMC. IPTp3 coverage >50% — one of only three countries in the East & Southern Africa subregion to reach that.",
+        "vaccine": "Original RTS,S pilot country (since 2019, under WHO's MVIP). Pilot evaluation showed ~13% reduction in all-cause child mortality and ~22% fewer severe-malaria hospitalizations where ~63–75% of children got 3 doses.",
+        "case_management": "Highest ACT-use-among-treated of all surveyed countries (~97%); early adopter of multiple first-line therapies (MFT).",
+        "vectors_resistance": "Confirmed resistance to ≥1 insecticide class. An. stephensi not reported.",
+        "first_line_treatment": "Artemether-lumefantrine (AL); SP for IPTp.",
+        "climate": "Cyclones and floods have repeatedly damaged health facilities and disrupted ITN/IRS campaigns.",
+        "data_note": "Latest national survey is dated (MIS 2017); some 2024 indicators were carried forward from 2023.",
+        "source": "WHO World Malaria Report 2025"
+      }
+    },
+    "mosquito_vectors": {
+      "regional_species_note": "Dominant vectors curated per region (see each region's 'vectors' field) are An. funestus, An. gambiae s.l. and An. arabiensis. WHO WMR 2025 does not break these out by country; the resistance and An. stephensi guidance below is the WMR 2025 layer.",
+      "anopheles_stephensi": {
+        "what": "Invasive urban malaria vector (native to Asia/Arabian Peninsula); efficient vector of P. falciparum AND P. vivax. Breeds in human-made water containers, wells and cisterns; survives high dry-season temperatures, enabling off-season URBAN transmission; carries multi-class insecticide resistance.",
+        "status_mozambique_malawi": "NOT detected. Mozambique 2024 surveillance at 2 sites returned negative; Malawi not reported. In the subregion only Ethiopia and Kenya have confirmed detections (first African detection: Djibouti 2012).",
+        "field_action": "In urban/peri-urban areas watch for container/well breeding; report any suspected An. stephensi (and negatives) to the NMCP and WHO.",
+        "source": "WHO World Malaria Report 2025 (pp. 102, 111–112)"
+      },
+      "insecticide_resistance": {
+        "pyrethroids": "Near-ubiquitous resistance across the WHO African Region (confirmed in ~91% of monitoring countries). ASSUME pyrethroid resistance in Mozambique and Malawi (both have confirmed resistance to ≥1 class).",
+        "organophosphates": "Largely still effective (resistance in ~21% of countries) — the basis for IRS such as pirimiphos-methyl (Actellic 300CS).",
+        "chlorfenapyr": "No confirmed resistance to date — remains effective against pyrethroid-resistant vectors.",
+        "net_choice": "Where pyrethroid resistance is confirmed (the default here), use a DUAL-ACTIVE net — pyrethroid-chlorfenapyr (e.g. Interceptor G2) or pyrethroid-pyriproxyfen — or a PBO net; NOT pyrethroid-only. Dual-active nets rose from 8% (2022) to 47% (2024) of nets delivered.",
+        "irs_choice": "Use a non-pyrethroid class (organophosphate/neonicotinoid, e.g. Actellic 300CS or SumiShield/clothianidin) and rotate classes; do not co-deploy pyrethroid IRS with pyrethroid nets.",
+        "source": "WHO World Malaria Report 2025 (pp. 108–110, 190)"
+      },
+      "vector_behavior": "ITNs and IRS work best where the dominant vector bites at night and rests INDOORS; outdoor / early-evening biting drives residual transmission that nets and IRS alone cannot close. Match the tool to local vector behaviour and resistance.",
+      "source": "WHO Subnational tailoring of malaria interventions reference manual (2025), pp. 34–35, 99, 106, 136–138"
+    },
+    "tailoring_principles": [
+      "Match the tool to vector behaviour + resistance: recommend ITNs/IRS where the vector bites and rests indoors at night; expect residual transmission where biting is outdoor/early-evening. If pyrethroid resistance is present, use dual-active/PBO nets and choose the IRS insecticide by the local resistance profile. Don't co-deploy ITNs+IRS in the same area — pick one and maximise coverage.",
+      "Stratify by transmission intensity and target by threshold: use parasite prevalence, case incidence and mortality; under resource limits, raise targeting thresholds to drop very-low-transmission areas (especially where case management is good) and serve the highest-burden, highest-mortality, most-underserved communities first.",
+      "Tailor on the full determinant set, not just burden: transmission level, age distribution of cases, seasonality, entomology (vector species/behaviour/resistance), environment/urbanicity, and vulnerable or conflict-affected populations.",
+      "Tailor timing: IRS must be timed to just before peak transmission; seasonal tools (SMC, seasonal vaccine dosing) target highly seasonal areas before the peak.",
+      "Larval source management only where larval habitats are few, fixed and findable (mainly urban/drier settings); elsewhere prioritise larviciding of identifiable new standing water.",
+      "Magude, Mozambique is the worked elimination example: case management + vector control + chemoprevention together averted ~76% of cases (all-ages incidence 195→75 per 1,000) — the model for Maputo province's Magude/Manhiça elimination corridor."
+    ],
+    "source_note": "Country profiles and vector/resistance guidance synthesised from the WHO World Malaria Report 2025; tailoring principles and the Magude case study from the WHO Subnational tailoring reference manual (2025). Figures are national (data year 2024) unless a province/district is named."
   },
   "regions": {
     "gaza": {

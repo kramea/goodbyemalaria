@@ -36,3 +36,6 @@ knowledge/historical_weather_cache.json
 knowledge/forecast_cache.json
 knowledge/dhis2_cache.json
 knowledge/pmi_cache_*.json
+
+# Source reference documents (extracted into knowledge/regions.json; too large to track)
+assets/*.pdf

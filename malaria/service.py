@@ -184,6 +184,17 @@ def build_enriched_context(region_key, country, rec, results, heal_warning="") -
         L += ["(National view — no single district named.)"]
     L += [""]
 
+    # National context (WHO World Malaria Report 2025, curated)
+    profile = (data.meta().get("country_profiles") or {}).get(country or "")
+    if profile:
+        L += [f"── NATIONAL CONTEXT — {country} (WHO WMR {profile.get('year', 2025)}) ──",
+              f"Burden        : {profile.get('estimated_cases', '—')}",
+              f"Incidence trend: {profile.get('incidence_trend_2015_2024', '—')}",
+              f"Vector control: {profile.get('vector_control', '—')}",
+              f"Chemoprevention: {profile.get('chemoprevention', '—')}",
+              f"Vaccine       : {profile.get('vaccine', '—')}",
+              "[Source: WHO World Malaria Report 2025]", ""]
+
     # ReliefWeb
     rw = results.get("reliefweb") or {}
     L += ["── RELIEFWEB LIVE ALERTS (last 72h) ──"]
@@ -254,6 +265,20 @@ def build_enriched_context(region_key, country, rec, results, heal_warning="") -
     wh = results.get("who") or {}
     if wh.get("summary"):
         L += ["── WHO NATIONAL BASELINE ──", wh["summary"], "[Source: WHO GHO]", ""]
+
+    # Vector & insecticide-resistance guidance (WHO WMR 2025, curated reference)
+    mv = data.meta().get("mosquito_vectors") or {}
+    ir = mv.get("insecticide_resistance") or {}
+    steph = mv.get("anopheles_stephensi") or {}
+    if ir or steph:
+        L += ["── VECTOR & RESISTANCE GUIDANCE (WHO WMR 2025) ──"]
+        if ir.get("net_choice"):
+            L += [f"Nets : {ir['net_choice']}"]
+        if ir.get("irs_choice"):
+            L += [f"IRS  : {ir['irs_choice']}"]
+        if steph.get("status_mozambique_malawi"):
+            L += [f"An. stephensi: {steph['status_mozambique_malawi']}"]
+        L += ["[Source: WHO World Malaria Report 2025]", ""]
 
     L += ["=== END SITUATION BRIEF ==="]
     return "\n".join(L)
